@@ -2,9 +2,10 @@ package pl.belicki.modbus.models.request
 
 import pl.belicki.modbus.models.{FunctionCode, PublicFunctionCode}
 
-case class WriteSingleCoil(
+case class WriteSingleRegisterRequest(
     address: Int,
-    value: Boolean
+    value: Short
 ) extends ModbusRequest {
-  override def getCode: FunctionCode = PublicFunctionCode.WriteSingleCoil
+
+  override def getCode: FunctionCode = PublicFunctionCode.WriteSingleRegister
 }
