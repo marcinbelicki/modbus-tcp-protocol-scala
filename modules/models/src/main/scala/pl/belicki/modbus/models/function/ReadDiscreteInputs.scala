@@ -1,6 +1,6 @@
 package pl.belicki.modbus.models.function
 
-object ReadCoils extends ModbusFunction(0x01) {
+object ReadDiscreteInputs extends ModbusFunction(0x02) {
 
   case class Request(
       address: Int,

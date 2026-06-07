@@ -19,6 +19,4 @@ abstract class ModbusFunction(_code: Int) {
     val code: Byte = (ModbusFunction.this.code + 0x80).toByte
   }
 
-  type REQ <: Request
-  type RES <: Response
 }

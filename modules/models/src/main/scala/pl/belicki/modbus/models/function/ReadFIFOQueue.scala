@@ -1,10 +1,9 @@
 package pl.belicki.modbus.models.function
 
-object ReadCoils extends ModbusFunction(0x01) {
+object ReadFIFOQueue extends ModbusFunction(0x18) {
 
   case class Request(
-      address: Int,
-      quantity: Int
+      address: Int
   ) extends super.Request
 
 }

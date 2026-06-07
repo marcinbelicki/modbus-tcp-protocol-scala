@@ -1,10 +1,10 @@
 package pl.belicki.modbus.models.function
 
-object ReadCoils extends ModbusFunction(0x01) {
+object WriteSingleCoil extends ModbusFunction(0x05) {
 
   case class Request(
       address: Int,
-      quantity: Int
+      value: Boolean
   ) extends super.Request
 
 }
