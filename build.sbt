@@ -15,5 +15,8 @@ lazy val root = project
 lazy val models = project
   .in(file("modules/models"))
   .settings(
-    name := "models"
+    name := "models",
+    libraryDependencies ++= List(
+      "org.scalatest" %% "scalatest" % "3.2.20" % Test
+    )
   )
