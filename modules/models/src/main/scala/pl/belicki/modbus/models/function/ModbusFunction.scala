@@ -32,7 +32,7 @@ abstract class ModbusFunction(_code: Int) {
     def toReq: Either[Error, REQ]
   }
 
-  def initialState: DecodeState = ???
+  def initialDecodeState: DecodeState = ???
 
   final def decode(byteBuffer: ByteBuffer): Either[Error, REQ] = {
     @tailrec
@@ -45,7 +45,7 @@ abstract class ModbusFunction(_code: Int) {
         }
       }
 
-    helper(initialState)
+    helper(initialDecodeState)
   }
 
 }
