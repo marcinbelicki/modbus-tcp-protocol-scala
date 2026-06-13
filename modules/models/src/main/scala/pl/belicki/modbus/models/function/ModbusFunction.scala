@@ -34,7 +34,7 @@ abstract class ModbusFunction(_code: Int) {
 
   def initialDecodeState: DecodeState = ???
 
-  final def decode(byteBuffer: ByteBuffer): Either[Error, REQ] = {
+  final def decodeRequest(byteBuffer: ByteBuffer): Either[Error, REQ] = {
     @tailrec
     def helper(state: DecodeState): Either[Error, REQ] =
       if (byteBuffer.remaining() <= 0) state.toReq
