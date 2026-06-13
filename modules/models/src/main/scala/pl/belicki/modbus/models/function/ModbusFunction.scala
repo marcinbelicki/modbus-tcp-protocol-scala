@@ -1,5 +1,7 @@
 package pl.belicki.modbus.models.function
 
+import pl.belicki.modbus.models.ExceptionCode
+
 import java.nio.ByteBuffer
 import scala.annotation.tailrec
 
@@ -14,7 +16,7 @@ abstract class ModbusFunction(_code: Int) {
     val function: ModbusFunction = ModbusFunction.this
   }
 
-  case class Error(exceptionCode: Byte) {
+  case class Error(exceptionCode: ExceptionCode) {
     val functionCode: Byte = Error.code
   }
 
