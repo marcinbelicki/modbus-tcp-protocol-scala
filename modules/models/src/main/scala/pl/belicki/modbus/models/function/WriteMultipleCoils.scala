@@ -35,7 +35,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
   private case class ReadingValue(address: Int, quantity: Int, byteCount: Int) extends DecodeState {
 
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() < byteCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() != byteCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
 
       val value = new Array[Byte](byteCount)
       byteBuffer.get(value)
