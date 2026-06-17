@@ -50,6 +50,8 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
     override def toReq: Either[Error, Request] = Right(request)
   }
 
+  override def initialDecodeState: DecodeState = Initial
+
   def validateQuantity(quantity: Int): Boolean                  = quantity >= 0x0001 && quantity <= 0x007b
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = (quantity * 2) == byteCount
 
