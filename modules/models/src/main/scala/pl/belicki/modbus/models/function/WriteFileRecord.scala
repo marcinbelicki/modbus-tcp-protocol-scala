@@ -27,6 +27,8 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       if (requestDataLength < 0x09 || requestDataLength > 0xfb) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
       if (requestDataLength != byteBuffer.remaining()) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
 
+      Right(ReadSubRequests(Nil))
+
     }
 
     override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
