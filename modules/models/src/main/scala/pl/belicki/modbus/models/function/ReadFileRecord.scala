@@ -26,7 +26,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       if ((byteCount % 7) != 0) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
 
       val subRequestCount = byteCount / 7
-      if (byteBuffer.remaining() != subRequestCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() != byteCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
 
       Right(ReadingSubRequests(subRequestCount))
 
