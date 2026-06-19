@@ -50,7 +50,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort())
 
-      Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests)
+      Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests))
     }
 
     override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
