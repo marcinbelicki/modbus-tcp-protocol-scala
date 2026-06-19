@@ -28,28 +28,18 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       val subRequestCount = byteCount / 7
       if (byteBuffer.remaining() != byteCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
 
-      Right(ReadingSubRequests(subRequestCount))
+      Right(ReadingSubRequests(subRequestCount, Nil))
 
     }
 
     override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
   }
 
-  private case class ReadingSubRequests(subRequestCount: Int) extends DecodeState {
+  private case class ReadingSubRequests(subRequestCount: Int, subRequests: List[SubRequest]) extends DecodeState {
 
-    private def toRequest(subRequests: LazyList[Either[Error, SubRequest]]) = {
-      @tailrec
-      def helper(subRequests: LazyList[Either[Error, SubRequest]], acc: List[SubRequest]): Either[Error, Request] =
-        subRequests match {
-          case Left(error) #:: _          => Left(error)
-          case Right(subRequest) #:: tail => helper(tail, subRequest :: acc)
-          case _                          => Right(Request(acc.reverse))
-        }
+    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+      if (subRequestCount == 0) return Right(FinalState(Request(subRequests.reverse)))
 
-      helper(subRequests, Nil)
-    }
-
-    private def readSubRequest(byteBuffer: ByteBuffer): Either[Error, SubRequest] = {
       if (byteBuffer.get() != 0x06) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
 
       val fileNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -60,13 +50,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort())
 
-      Right(SubRequest(fileNumber, recordNumber, recordLength))
-    }
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      val subRequests = LazyList.fill(subRequestCount)(readSubRequest(byteBuffer))
-
-      toRequest(subRequests)
-        .map(FinalState)
+      Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests)
     }
 
     override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
