@@ -55,8 +55,8 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  def validateRaedQuantity(quantity: Int): Boolean     = quantity >= 0x0001 && quantity <= 0x007d
-  def validateWriteQuantity(quantity: Int): Boolean    = quantity >= 0x0001 && quantity <= 0x0079
-  def validateByteCount(byteCount: Int, quantity: Int) = byteCount == quantity * 2
+  def validateRaedQuantity(quantity: Int): Boolean              = quantity >= 0x0001 && quantity <= 0x007d
+  def validateWriteQuantity(quantity: Int): Boolean             = quantity >= 0x0001 && quantity <= 0x0079
+  def validateByteCount(byteCount: Int, quantity: Int): Boolean = byteCount == quantity * 2
 
 }
