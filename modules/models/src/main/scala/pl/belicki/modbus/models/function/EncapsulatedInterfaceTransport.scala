@@ -14,6 +14,8 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       val subFunction: SubFunction = SubFunction.this
     }
 
+    def initialDecodeState: DecodeState
+
   }
 
   object SubFunction {
@@ -26,7 +28,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       .groupBy(_.code)
       .map {
         case (byte, subFunction :: Nil) => (byte, subFunction)
-        case (byte, subFunctions)       => throw new IllegalStateException(f"Too many subFunctions: $subFunctions for code code: 0x$byte%02X")
+        case (byte, subFunctions)       => throw new IllegalStateException(f"Too many subFunctions: $subFunctions for code: 0x$byte%02X")
       }
 
   }
@@ -38,12 +40,14 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         objectId: Short
     ) extends super.Request
 
+    override def initialDecodeState: DecodeState = ???
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
 
     case class Request() extends super.Request
 
+    override def initialDecodeState: DecodeState = ???
   }
 
   type REQ = Request
@@ -52,7 +56,12 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
       if (byteBuffer.remaining() < 1) return ExceptionCode.ILLEGAL_DATA_VALUE
 
-      val code =
+      val code = byteBuffer.get()
+
+      SubFunction.subFunctionByCode.get(code) match {
+        case Some(subFunction) =>
+        case
+      }
     }
 
     override def toReq: Either[Error, Request] = ???
