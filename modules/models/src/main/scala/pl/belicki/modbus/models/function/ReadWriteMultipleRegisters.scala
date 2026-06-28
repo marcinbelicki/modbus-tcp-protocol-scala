@@ -21,7 +21,7 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
       val readAddress  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val readQuantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateRaedQuantity(readQuantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!validateReadQuantity(readQuantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val writeAddress  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val writeQuantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -55,7 +55,7 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  def validateRaedQuantity(quantity: Int): Boolean              = quantity >= 0x0001 && quantity <= 0x007d
+  def validateReadQuantity(quantity: Int): Boolean              = quantity >= 0x0001 && quantity <= 0x007d
   def validateWriteQuantity(quantity: Int): Boolean             = quantity >= 0x0001 && quantity <= 0x0079
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = byteCount == quantity * 2
 
