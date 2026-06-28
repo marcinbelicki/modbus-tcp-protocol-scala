@@ -16,7 +16,7 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
 
   private object Initial extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() != 6) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() != 6) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address         = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val andMask, orMask = byteBuffer.getShort
 
@@ -31,12 +31,11 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
       )
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class FinalState(request: Request) extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] =
-      Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
 
     override def toReq: Either[Error, Request] = Right(request)
   }

@@ -16,26 +16,26 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
 
   private object Initial extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() < 5) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() < 5) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val address   = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val quantity  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
 
-      if (!validateQuantity(quantity)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
-      if (!validateByteCount(byteCount, quantity)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (!validateQuantity(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!validateByteCount(byteCount, quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(ReadingValue(address, quantity, byteCount))
 
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class ReadingValue(address: Int, quantity: Int, byteCount: Int) extends DecodeState {
 
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() != byteCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val value = new Array[Byte](byteCount)
       byteBuffer.get(value)
@@ -43,12 +43,12 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       Right(FinalState(Request(address, quantity, value)))
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class FinalState(request: Request) extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] =
-      Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      ExceptionCode.ILLEGAL_DATA_VALUE
 
     override def toReq: Either[Error, Request] = Right(request)
   }

@@ -4,6 +4,7 @@ import pl.belicki.modbus.models.ExceptionCode
 
 import java.nio.ByteBuffer
 import scala.annotation.tailrec
+import scala.language.implicitConversions
 
 abstract class ModbusFunction(_code: Int) {
   val code: Byte = _code.toByte
@@ -21,7 +22,10 @@ abstract class ModbusFunction(_code: Int) {
   }
 
   object Error {
-    val code: Byte = (ModbusFunction.this.code + 0x80).toByte
+    val code: Byte                                                               = (ModbusFunction.this.code + 0x80).toByte
+    implicit def toError(exceptionCode: ExceptionCode): Error                    = apply(exceptionCode)
+    implicit def toLeftError(exceptionCode: ExceptionCode): Left[Error, Nothing] = toLeft(exceptionCode)
+    implicit def toLeft(error: Error): Left[Error, Nothing]                      = Left(error)
   }
 
   type REQ <: Request

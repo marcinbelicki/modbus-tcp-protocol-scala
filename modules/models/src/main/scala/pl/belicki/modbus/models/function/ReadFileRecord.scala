@@ -21,18 +21,18 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   private object Initial extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() < 8) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() < 8) return ExceptionCode.ILLEGAL_DATA_VALUE
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
-      if ((byteCount % 7) != 0) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if ((byteCount % 7) != 0) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val subRequestCount = byteCount / 7
-      if (byteBuffer.remaining() != byteCount) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(ReadingSubRequests(subRequestCount, Nil))
 
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class ReadingSubRequests(subRequestCount: Int, subRequests: List[SubRequest]) extends DecodeState {
@@ -40,24 +40,24 @@ object ReadFileRecord extends ModbusFunction(0x14) {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
       if (subRequestCount == 0) return Right(FinalState(Request(subRequests.reverse)))
 
-      if (byteBuffer.get() != 0x06) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.get() != 0x06) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val fileNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateFileNumber(fileNumber)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (!validateFileNumber(fileNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val recordNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateRecordNumber(recordNumber)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (!validateRecordNumber(recordNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort())
 
       Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests))
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class FinalState(request: Request) extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
 
     override def toReq: Either[Error, Request] = Right(request)
   }

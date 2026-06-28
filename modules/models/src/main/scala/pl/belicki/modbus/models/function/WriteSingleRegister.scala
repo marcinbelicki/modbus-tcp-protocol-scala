@@ -15,7 +15,7 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
 
   private object Initial extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() < 4) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() < 4) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val value   = byteBuffer.getShort
 
@@ -23,12 +23,12 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
     }
 
     override def toReq: Either[Error, Request] =
-      Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class FinalState(request: Request) extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] =
-      Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      ExceptionCode.ILLEGAL_DATA_VALUE
 
     override def toReq: Either[Error, Request] =
       Right(request)

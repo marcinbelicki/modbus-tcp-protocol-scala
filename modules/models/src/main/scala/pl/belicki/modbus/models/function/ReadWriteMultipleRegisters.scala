@@ -17,23 +17,23 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
   private object Initial extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-      if (byteBuffer.remaining() < 9) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (byteBuffer.remaining() < 9) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val readAddress  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val readQuantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateRaedQuantity(readQuantity)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (!validateRaedQuantity(readQuantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val writeAddress  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val writeQuantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateWriteQuantity(writeQuantity)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (!validateWriteQuantity(writeQuantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
-      if (!validateByteCount(byteCount, writeQuantity)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+      if (!validateByteCount(byteCount, writeQuantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(ReadBytes(byteCount, readAddress, readQuantity, writeAddress))
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class ReadBytes(byteCount: Int, readAddress: Int, readQuantity: Int, writeAddress: Int) extends DecodeState {
@@ -44,11 +44,11 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       Right(FinalState(Request(readAddress, readQuantity, writeAddress, writeValue)))
     }
 
-    override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class FinalState(request: Request) extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
 
     override def toReq: Either[Error, Request] = Right(request)
   }
