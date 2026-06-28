@@ -29,6 +29,8 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
       if (!validateByteCount(byteCount, writeQuantity)) return Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+
+      Right(ReadBytes(byteCount, readAddress, readQuantity, writeAddress))
     }
 
     override def toReq: Either[Error, Request] = Left(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
