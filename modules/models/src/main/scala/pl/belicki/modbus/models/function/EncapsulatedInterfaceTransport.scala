@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.function.EncapsulatedInterfaceTransport.CANopenGeneralReference.Request
 
 import java.nio.ByteBuffer
 
@@ -35,10 +36,20 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
   object ReadDeviceIdentification extends SubFunction(0x0e) {
 
+    abstract class
+
     case class Request(
         deviceIdCode: Byte,
         objectId: Short
     ) extends super.Request
+
+    private object Initial extends DecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+        val byte
+      }
+
+      override def toReq: Either[Error, Request] = Right(Request())
+    }
 
     override def initialDecodeState: DecodeState = ???
   }
@@ -47,7 +58,13 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
     case class Request() extends super.Request
 
-    override def initialDecodeState: DecodeState = ???
+    private object Initial extends DecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.SERVER_DEVICE_FAILURE
+
+      override def toReq: Either[Error, Request] = Right(Request())
+    }
+
+    override def initialDecodeState: DecodeState = Initial
   }
 
   type REQ = Request
