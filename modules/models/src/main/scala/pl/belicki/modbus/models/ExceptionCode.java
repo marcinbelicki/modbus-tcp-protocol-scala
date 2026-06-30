@@ -12,7 +12,6 @@ public enum ExceptionCode {
     GATEWAY_PATH_UNAVAILABLE(0x0a),
     GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND(0x0b);
 
-
     private final byte code;
 
     ExceptionCode(int _code) {
