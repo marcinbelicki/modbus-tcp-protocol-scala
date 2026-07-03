@@ -45,7 +45,8 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
     private object Initial extends DecodeState {
       override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
-        val byte
+        if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
+
       }
 
       override def toReq: Either[Error, Request] = Right(Request())
@@ -76,7 +77,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       val code = byteBuffer.get()
 
       SubFunction.subFunctionByCode.get(code) match {
-        case Some(subFunction) =>
+        case Some(subFunction) => subFunction.initialDecodeState
         case
       }
     }
