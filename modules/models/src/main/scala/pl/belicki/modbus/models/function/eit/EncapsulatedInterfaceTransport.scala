@@ -1,7 +1,7 @@
-package pl.belicki.modbus.models.function
+package pl.belicki.modbus.models.function.eit
 
 import pl.belicki.modbus.models.ExceptionCode
-import pl.belicki.modbus.models.function.EncapsulatedInterfaceTransport.CANopenGeneralReference.Request
+import pl.belicki.modbus.models.function.ModbusFunction
 
 import java.nio.ByteBuffer
 
