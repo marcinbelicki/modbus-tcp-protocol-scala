@@ -12,6 +12,7 @@ object ObjectId {
   case class Reserved(code: Byte) extends ObjectId {
     override def getCode: Byte = code
   }
+
   case class ProductDependant(code: Byte) extends ObjectId {
     override def getCode: Byte = code
   }
@@ -20,5 +21,15 @@ object ObjectId {
     override protected def getCode(e: DefinedObjectId): Byte = e.getCode
 
     override protected def viewCode(a: Byte): String = String.format("%02X", a)
+  }
+
+  def apply(code: Byte): ObjectId = {
+
+    def notDefined: ObjectId = {
+      if (code <= 0x7f) return Reserved(code)
+      ProductDependant(code)
+    }
+
+    Defined.valueByCode.getOrElse(code, notDefined)
   }
 }

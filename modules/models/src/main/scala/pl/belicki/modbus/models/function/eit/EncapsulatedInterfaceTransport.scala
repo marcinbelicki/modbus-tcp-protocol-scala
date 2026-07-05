@@ -1,6 +1,6 @@
 package pl.belicki.modbus.models.function.eit
 
-import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.{EnumUtil, ExceptionCode}
 import pl.belicki.modbus.models.function.ModbusFunction
 
 import java.nio.ByteBuffer
@@ -36,23 +36,32 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
   object ReadDeviceIdentification extends SubFunction(0x0e) {
 
-    abstract class
-
     case class Request(
-        deviceIdCode: Byte,
-        objectId: Short
+        deviceIdCode: ReadDeviceIdCode,
+        objectId: ObjectId
     ) extends super.Request
 
     private object Initial extends DecodeState {
       override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
         if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
 
+        for {
+          readDeviceIdCode <- ReadDeviceIdCode.getOrElseIllegal(byteBuffer.get())
+          objectId = ObjectId(byteBuffer.get())
+        } yield FinalState(Request(readDeviceIdCode, objectId))
+
       }
 
-      override def toReq: Either[Error, Request] = Right(Request())
+      override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
     }
 
-    override def initialDecodeState: DecodeState = ???
+    private case class FinalState(request: Request) extends DecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
+
+      override def toReq: Either[Error, Request] = Right(request)
+    }
+
+    override def initialDecodeState: DecodeState = Initial
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
@@ -77,12 +86,18 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       val code = byteBuffer.get()
 
       SubFunction.subFunctionByCode.get(code) match {
-        case Some(subFunction) => subFunction.initialDecodeState
-        case
+        case Some(subFunction) => Right(subFunction.initialDecodeState)
+        case None              => ExceptionCode.ILLEGAL_DATA_VALUE
       }
     }
 
-    override def toReq: Either[Error, Request] = ???
+    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+  }
+
+  object ReadDeviceIdCode extends EnumUtil[ReadDeviceIdCode, Byte] {
+    override protected def getCode(e: ReadDeviceIdCode): Byte = e.getCode
+
+    override protected def viewCode(a: Byte): String = String.format("%02X", a)
   }
 
 }

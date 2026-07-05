@@ -14,6 +14,9 @@ abstract class EnumUtil[E <: Enum[E]: ClassTag, A] {
           throw new IllegalStateException(f"Too many values: ${values.mkString("Array(", ", ", ")")} for code: ${viewCode(code)}")
       }
 
+  def getOrElseIllegal(code: A): Either[ExceptionCode, E] =
+    valueByCode.get(code).toRight(ExceptionCode.ILLEGAL_DATA_VALUE)
+
 }
 
 object EnumUtil {

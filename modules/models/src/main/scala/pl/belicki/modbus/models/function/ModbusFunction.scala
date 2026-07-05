@@ -22,10 +22,11 @@ abstract class ModbusFunction(_code: Int) {
   }
 
   object Error {
-    val code: Byte                                                               = (ModbusFunction.this.code + 0x80).toByte
-    implicit def toError(exceptionCode: ExceptionCode): Error                    = apply(exceptionCode)
-    implicit def toLeftError(exceptionCode: ExceptionCode): Left[Error, Nothing] = toLeft(exceptionCode)
-    implicit def toLeft(error: Error): Left[Error, Nothing]                      = Left(error)
+    val code: Byte                                                                    = (ModbusFunction.this.code + 0x80).toByte
+    implicit def toError(exceptionCode: ExceptionCode): Error                         = apply(exceptionCode)
+    implicit def toLeftError(exceptionCode: ExceptionCode): Left[Error, Nothing]      = toLeft(exceptionCode)
+    implicit def toLeft(error: Error): Left[Error, Nothing]                           = Left(error)
+    implicit def toEitherError[R](either: Either[ExceptionCode, R]): Either[Error, R] = either.left.map(toError)
   }
 
   type REQ <: Request
