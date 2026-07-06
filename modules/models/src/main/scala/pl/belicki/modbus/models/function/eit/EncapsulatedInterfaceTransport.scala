@@ -100,4 +100,6 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     override protected def viewCode(a: Byte): String = String.format("%02X", a)
   }
 
+  override def initialDecodeState: DecodeState = Initial
+
 }
