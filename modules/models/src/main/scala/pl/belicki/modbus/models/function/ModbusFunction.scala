@@ -37,6 +37,12 @@ abstract class ModbusFunction(_code: Int) {
     def toReq: Either[Error, REQ]
   }
 
+  protected case class FinalState(request: REQ) extends DecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
+
+    override def toReq: Either[Error, REQ] = Right(request)
+  }
+
   def initialDecodeState: DecodeState
 
   final def decodeRequest(byteBuffer: ByteBuffer): Either[Error, REQ] = {

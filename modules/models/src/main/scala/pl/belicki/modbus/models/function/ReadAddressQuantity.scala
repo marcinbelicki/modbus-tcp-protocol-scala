@@ -23,14 +23,6 @@ trait ReadAddressQuantity {
     override def toReq: Either[Error, REQ] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  private case class FinalState(request: REQ) extends DecodeState {
-
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] =
-      ExceptionCode.ILLEGAL_DATA_VALUE
-
-    override def toReq: Either[Error, REQ] = Right(request)
-  }
-
   override def initialDecodeState: DecodeState = Initial
 
   def validateQuantity(quantity: Int): Boolean
