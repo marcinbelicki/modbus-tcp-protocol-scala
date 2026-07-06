@@ -37,4 +37,5 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
     override def toReq: Either[Error, Request] = Right(request)
   }
 
+  override def initialDecodeState: DecodeState = Initial
 }
