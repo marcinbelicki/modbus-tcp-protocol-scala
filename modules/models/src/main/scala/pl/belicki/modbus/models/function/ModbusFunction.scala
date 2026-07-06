@@ -44,6 +44,7 @@ abstract class ModbusFunction(_code: Int) {
   }
 
   def initialDecodeState: DecodeState
+  def validateRequest(request: REQ): Either[String, REQ]
 
   final def decodeRequest(byteBuffer: ByteBuffer): Either[Error, REQ] = {
     @tailrec

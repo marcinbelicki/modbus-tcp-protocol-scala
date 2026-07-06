@@ -96,4 +96,5 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
   override def initialDecodeState: DecodeState = Initial
 
+  override def validateRequest(request: Request): Either[String, Request] = Right(request)
 }
