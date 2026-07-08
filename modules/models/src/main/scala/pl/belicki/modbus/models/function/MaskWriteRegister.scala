@@ -36,4 +36,5 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
 
   override def initialDecodeState: DecodeState = Initial
 
+  override def validateRequest(request: Request): Either[String, Request] = ???
 }
