@@ -28,4 +28,6 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
 
   override def initialDecodeState: DecodeState = Initial
 
+  override def validateRequest(request: Request): Either[String, Request] = Right(request)
+
 }
