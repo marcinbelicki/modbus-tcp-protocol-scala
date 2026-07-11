@@ -46,7 +46,6 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
     override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-
   override def initialDecodeState: DecodeState = Initial
 
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = {
@@ -63,4 +62,13 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
   def validateQuantity(quantity: Int): Boolean =
     quantity >= 1 && quantity <= 0x07b0
 
+  override def validateRequest(request: Request): Either[String, Request] = for {
+    _ <- Either.cond(
+      validateByteCount(request.value.length, request.quantity),
+      (),
+      s"The length of the value: ${request.value.length} must correspond with the quantity: ${request.quantity}."
+    )
+    _ <- Either.cond(validateQuantity(request.quantity), (), "The quantity must be inside of the range: <1;0x07b0>")
+    _ <- Either.cond(request.address <= 0xffff, (), "The address must be inside of the range: <0;0xffff>")
+  } yield request
 }
