@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.function.WriteMultipleCoils.{Request, validateByteCount, validateQuantity}
 
 import java.nio.ByteBuffer
 
@@ -48,4 +49,13 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
   def validateQuantity(quantity: Int): Boolean                  = quantity >= 0x0001 && quantity <= 0x007b
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = (quantity * 2) == byteCount
 
+  override def validateRequest(request: Request): Either[String, Request] = for {
+    _ <- Either.cond(
+      validateByteCount(request.value.length, request.quantity),
+      (),
+      s"The length of the value: ${request.value.length} must correspond with the quantity: ${request.quantity}."
+    )
+    _ <- Either.cond(validateQuantity(request.quantity), (), "The quantity must be inside of the range: <1;0x007b>")
+    _ <- Either.cond(request.address <= 0xffff, (), "The address must be inside of the range: <0;0xffff>")
+  } yield request
 }
