@@ -61,4 +61,28 @@ object ReadFileRecord extends ModbusFunction(0x14) {
   def validateFileNumber(fileNumber: Int): Boolean     = fileNumber >= 0x0001 && fileNumber <= 0xffff
   def validateRecordNumber(recordNumber: Int): Boolean = recordNumber >= 0x0000 && recordNumber <= 0x270f
 
+  def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] =
+    for {
+      _ <- Either.cond(
+        validateFileNumber(subRequest.fileNumber),
+        (),
+        s"The fileNumber: ${subRequest.recordNumber} of the request must be inside of the range <0x0001;0xffff>"
+      )
+      _ <- Either.cond(validateRecordNumber(subRequest.recordNumber), (), "The record Number must be in: <1;2000>.")
+    } yield subRequest
+
+  override def validateRequest(request: Request): Either[String, Request] = {
+    @tailrec
+    def helper(subRequests: List[SubRequest], errors: List[String]): Either[String, Request] =
+      subRequests match {
+        case head :: tail => validateSubRequest(head) match {
+            case Right(_)    => helper(tail, errors)
+            case Left(error) => helper(tail, error :: errors)
+          }
+        case _ =>
+          if (errors.isEmpty) Right(request) else Left(errors.mkString(System.lineSeparator()))
+      }
+
+    helper(request.subRequests, Nil)
+  }
 }
