@@ -36,5 +36,11 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  override def validateRequest(request: Request): Either[String, Request] = ???
+  override def validateRequest(request: Request): Either[String, Request] = {
+    if (request.address > 0xffff || request.address < 0x0000)
+      return Left(s"The address of the request must be inside of the range <0x0000;0xffff>")
+
+    Right(request)
+  }
+
 }

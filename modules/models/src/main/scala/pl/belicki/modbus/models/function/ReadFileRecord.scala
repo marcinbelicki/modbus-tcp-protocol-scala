@@ -63,9 +63,11 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] = {
     if (!validateFileNumber(subRequest.fileNumber))
-      return Left(s"The fileNumber: ${subRequest.recordNumber} of the request must be inside of the range <0x0001;0xffff>")
+      return Left(s"The file number: ${subRequest.recordNumber} of the request must be inside of the range <0x0001;0xffff>")
 
-    if (!validateRecordNumber(subRequest.recordNumber)) return Left(s"The record number: ${subRequest.recordNumber} must be inside of the range: <1;0x270f>.")
+    if (!validateRecordNumber(subRequest.recordNumber))
+      return Left(s"The record number: ${subRequest.recordNumber} must be inside of the range: <1;0x270f>.")
+
 
     Right(subRequest)
   }

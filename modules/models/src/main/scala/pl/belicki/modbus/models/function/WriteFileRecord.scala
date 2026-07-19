@@ -1,15 +1,16 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.function.ReadFileRecord.{Request, SubRequest, validateSubRequest}
 
 import java.nio.ByteBuffer
+import scala.annotation.tailrec
 
 object WriteFileRecord extends ModbusFunction(0x15) {
 
   case class SubRequest(
       fileNumber: Int,
       recordNumber: Int,
-      recordLength: Int,
       recordData: Array[Byte]
   )
 
@@ -55,7 +56,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
       Right(
         ReadSubRequests(
-          SubRequest(fileNumber, recordNumber, recordLength, recordData) :: subRequests
+          SubRequest(fileNumber, recordNumber, recordData) :: subRequests
         )
       )
     }
@@ -66,6 +67,32 @@ object WriteFileRecord extends ModbusFunction(0x15) {
   override def initialDecodeState: DecodeState = Initial
 
   def validateFileNumber(fileNumber: Int): Boolean     = fileNumber >= 0x0001 && fileNumber <= 0xffff
-  def validateRecordNumber(recordNumber: Int): Boolean = recordNumber <= 0x270f
+  def validateRecordNumber(recordNumber: Int): Boolean = recordNumber >= 0x0000 && recordNumber <= 0x270f
+
+  def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] = {
+    if (!validateFileNumber(subRequest.fileNumber))
+      return Left(s"The file number: ${subRequest.fileNumber} of the request must be inside of the range <0x0001;0xffff>")
+    if (!validateRecordNumber(subRequest.recordNumber))
+      return Left(s"The record number: ${subRequest.recordNumber} of the request must be inside of the range <0x0;0x270f")
+    if (subRequest.recordData.length % 2 != 0)
+      return Left(s"The length of the record data must be even number.")
+
+    Right(subRequest)
+  }
+
+  override def validateRequest(request: Request): Either[String, Request] = {
+    @tailrec
+    def helper(subRequests: List[SubRequest], errors: List[String]): Either[String, Request] =
+      subRequests match {
+        case head :: tail => validateSubRequest(head) match {
+            case Right(_)    => helper(tail, errors)
+            case Left(error) => helper(tail, error :: errors)
+          }
+        case _ =>
+          if (errors.isEmpty) Right(request) else Left(errors.mkString(System.lineSeparator()))
+      }
+
+    helper(request.subRequests, Nil)
+  }
 
 }
