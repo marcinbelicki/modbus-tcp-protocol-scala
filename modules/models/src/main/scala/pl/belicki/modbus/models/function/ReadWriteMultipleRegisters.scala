@@ -53,4 +53,15 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
   def validateWriteQuantity(quantity: Int): Boolean             = quantity >= 0x0001 && quantity <= 0x0079
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = byteCount == quantity * 2
 
+  override def validateRequest(request: Request): Either[String, Request] = {
+    if (request.readAddress < 0x0000 || request.readAddress > 0xffff)
+      return Left(s"The read address: ${request.readAddress} of the request must be inside of the range <0x0000;0xffff>")
+
+    if (!validateReadQuantity(request.readQuantity))
+      return Left(s"The read quantity: ${request.readQuantity} of the request must be inside of the range <0x0001;0x007d>")
+
+    if (request.writeAddress < 0x0000 || request.writeAddress > 0xffff)
+      return Left(s"The write address: ${request.writeAddress} of the request must be inside of the range <0x0000;0xffff>")
+  }
+
 }
