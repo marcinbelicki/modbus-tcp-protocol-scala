@@ -62,6 +62,14 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
     if (request.writeAddress < 0x0000 || request.writeAddress > 0xffff)
       return Left(s"The write address: ${request.writeAddress} of the request must be inside of the range <0x0000;0xffff>")
+
+    if (!validateWriteQuantity(request.writeValue.length / 2))
+      return Left(s"The length of the write value: ${request.writeValue.length} must be inside of the range <0x0000;0x0079>")
+
+    if (request.writeValue.length % 2 != 0)
+      return Left(s"The length of the write value: ${request.writeValue.length} must be even number")
+
+    Right(request)
   }
 
 }
