@@ -11,6 +11,9 @@ abstract class ModbusFunction(_code: Int) {
 
   abstract class Request {
     val function: ModbusFunction = ModbusFunction.this
+
+    def size: Int
+    def encode: ByteBuffer = ByteBuffer.allocate(size)
   }
 
   abstract class Response {
