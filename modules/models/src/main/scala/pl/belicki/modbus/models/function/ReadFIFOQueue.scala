@@ -24,4 +24,10 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
 
   override def initialDecodeState: ReadFIFOQueue.DecodeState = Initial
 
+  override def validateRequest(request: Request): Either[String, Request] = {
+    if (request.address > 0xffff || request.address < 0x0000)
+      return Left(s"The address of the request: ${request.address} must be inside of the range: <0x0000;0xffff>")
+
+    Right(request)
+  }
 }
