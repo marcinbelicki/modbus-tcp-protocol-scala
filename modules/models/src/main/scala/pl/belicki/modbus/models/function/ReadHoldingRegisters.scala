@@ -1,11 +1,17 @@
 package pl.belicki.modbus.models.function
 
+import java.nio.ByteBuffer
+
 object ReadHoldingRegisters extends ModbusFunction(0x03) with ReadRegisters {
 
   case class Request(
       address: Int,
       quantity: Int
-  ) extends super.Request
+  ) extends super.Request {
+    override def size: Int = ReadAddressQuantity.requestSize
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = encodeRequest(byteBuffer, this)
+  }
 
   override type REQ = Request
 

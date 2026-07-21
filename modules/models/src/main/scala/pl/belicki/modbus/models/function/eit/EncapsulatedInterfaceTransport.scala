@@ -60,7 +60,10 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
 
-    case class Request() extends super.Request
+    case class Request() extends super.Request {
+      override def size: Int                                  = 0
+      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = Right(byteBuffer)
+    }
 
     private object Initial extends DecodeState {
       override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.SERVER_DEVICE_FAILURE

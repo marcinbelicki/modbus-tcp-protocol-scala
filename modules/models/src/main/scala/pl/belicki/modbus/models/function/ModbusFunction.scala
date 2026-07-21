@@ -13,7 +13,14 @@ abstract class ModbusFunction(_code: Int) {
     val function: ModbusFunction = ModbusFunction.this
 
     def size: Int
-    def encode: ByteBuffer = ByteBuffer.allocate(size)
+    def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer]
+
+    def toByteBuffer: Either[String, ByteBuffer] = {
+      val byteBuffer = ByteBuffer.allocate(size + java.lang.Byte.BYTES)
+      byteBuffer.put(code)
+
+      encode(byteBuffer)
+    }
   }
 
   abstract class Response {

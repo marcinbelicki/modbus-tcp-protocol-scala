@@ -30,9 +30,29 @@ trait ReadAddressQuantity {
   protected def getAddress(request: REQ): Int
   protected def getQuantity(request: REQ): Int
 
-  override def validateRequest(request: REQ): Either[String, REQ] =
+  override def validateRequest(request: REQ): Either[String, REQ] = {
+    val address       = getAddress(request)
+    lazy val quantity = getQuantity(request)
+
+    if (address < 0 || address > 0xffff)
+      return Left(s"The address of the request: $address must be inside of the range <0x0000;0xffff>")
+
+    if (!validateQuantity(quantity))
+      return Left(s"The quantity of the request: $quantity is outside of accepted range: <0x0001;0x07d0>")
+
+    Right(request)
+  }
+
+  protected def encodeRequest(byteBuffer: ByteBuffer, request: REQ): Either[String, ByteBuffer] =
     for {
-      _ <- Either.cond(getAddress(request) <= 0xffff, (), "The address of the request must be less or equal to 0xffff.")
-      _ <- Either.cond(validateQuantity(getQuantity(request)), (), "The quantity of the request is outside of accepted range: <1;2000>.")
-    } yield request
+      _ <- validateRequest(request)
+    } yield {
+      byteBuffer.putShort(getAddress(request).toShort)
+      byteBuffer.putShort(getQuantity(request).toShort)
+    }
+
+}
+
+object ReadAddressQuantity {
+  lazy val requestSize: Int = java.lang.Short.BYTES * 2
 }

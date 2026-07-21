@@ -10,7 +10,23 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
       address: Int,
       andMask: Short,
       orMask: Short
-  ) extends super.Request
+  ) extends super.Request {
+    override def size: Int = Request.size
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {
+      _ <- validateRequest(this)
+    } yield {
+      byteBuffer.putShort(address.toShort)
+      byteBuffer.putShort(andMask)
+      byteBuffer.putShort(orMask)
+    }
+
+  }
+
+  object Request {
+    private lazy val size =
+      java.lang.Short.BYTES * 3
+  }
 
   type REQ = Request
 
