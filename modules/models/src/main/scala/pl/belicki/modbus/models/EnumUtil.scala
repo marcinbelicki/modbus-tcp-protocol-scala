@@ -11,7 +11,7 @@ abstract class EnumUtil[E <: Enum[E]: ClassTag, A] {
       .map {
         case (code, Array(single)) => code -> single
         case (code, values)        =>
-          throw new IllegalStateException(f"Too many values: ${values.mkString("Array(", ", ", ")")} for code: ${viewCode(code)}")
+          throw new IllegalStateException(s"Too many values: ${values.mkString("Array(", ", ", ")")} for code: ${viewCode(code)}")
       }
 
   def getOrElseIllegal(code: A): Either[ExceptionCode, E] =
