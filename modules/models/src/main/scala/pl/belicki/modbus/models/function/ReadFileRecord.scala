@@ -59,8 +59,8 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  object FileNumberValidator   extends RangeValidator(0x0001, 0xffff, "file number", "04X")
-  object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number", "04X")
+  object FileNumberValidator   extends RangeValidator(0x0001, 0xffff, "file number")
+  object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")
 
   def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] = {
     for {

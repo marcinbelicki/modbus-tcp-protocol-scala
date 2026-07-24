@@ -1,8 +1,10 @@
 package pl.belicki.modbus.models.function
 
+import pl.belicki.modbus.models.validator.RangeValidator
+
 trait ReadBits extends ReadAddressQuantity {
   this: ModbusFunction =>
 
-  final def validateQuantity(quantity: Int): Boolean = quantity <= 2000 && quantity >= 1
- 
+  override lazy val quantityValidator: RangeValidator = new RangeValidator(0x0001, 0x07d0, "quantity")
+
 }

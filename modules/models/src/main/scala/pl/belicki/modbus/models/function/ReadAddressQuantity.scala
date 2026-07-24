@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 
@@ -15,7 +16,7 @@ trait ReadAddressQuantity {
       val address  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val quantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
 
-      if (!validateQuantity(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!quantityValidator.validateBool(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(FinalState(toRequest(address, quantity)))
     }
@@ -25,23 +26,17 @@ trait ReadAddressQuantity {
 
   override def initialDecodeState: DecodeState = Initial
 
-  def validateQuantity(quantity: Int): Boolean
-
   protected def getAddress(request: REQ): Int
   protected def getQuantity(request: REQ): Int
 
-  override def validateRequest(request: REQ): Either[String, REQ] = {
-    val address       = getAddress(request)
-    lazy val quantity = getQuantity(request)
+  object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
+  def quantityValidator: RangeValidator
 
-    if (address < 0 || address > 0xffff)
-      return Left(s"The address of the request: $address must be inside of the range <0x0000;0xffff>")
-
-    if (!validateQuantity(quantity))
-      return Left(s"The quantity of the request: $quantity is outside of accepted range: <0x0001;0x07d0>")
-
-    Right(request)
-  }
+  override def validateRequest(request: REQ): Either[String, REQ] =
+    for {
+      _ <- AddressValidator.validate(getAddress(request))
+      _ <- quantityValidator.validate(getQuantity(request))
+    } yield request
 
   protected def encodeRequest(byteBuffer: ByteBuffer, request: REQ): Either[String, ByteBuffer] =
     for {
