@@ -9,7 +9,14 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
 
   case class Request(
       address: Int
-  ) extends super.Request
+  ) extends super.Request {
+    override def size: Int = java.lang.Short.BYTES
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateRequest(this)
+      } yield byteBuffer.putShort(address.toShort)
+  }
 
   override type REQ = Request
 

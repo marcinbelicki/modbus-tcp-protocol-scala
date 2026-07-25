@@ -12,7 +12,17 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       readQuantity: Int,
       writeAddress: Int,
       writeValue: Array[Byte]
-  ) extends super.Request
+  ) extends super.Request {
+
+    override lazy val size: Int =
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+  }
+
+  object Request {
+
+
+  }
 
   type REQ = Request
 
