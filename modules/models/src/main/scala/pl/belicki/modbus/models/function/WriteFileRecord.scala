@@ -13,11 +13,20 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       fileNumber: Int,
       recordNumber: Int,
       recordData: Array[Byte]
-  )
+  ) {
+    lazy val size: Int = java.lang.Short.BYTES * 3 + recordData.length + java.lang.Byte.BYTES
+  }
 
   case class Request(
       subRequests: List[SubRequest]
-  ) extends super.Request
+  ) extends super.Request {
+    override lazy val size: Int = subRequests.map(_.size).sum + java.lang.Byte.BYTES
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+
+      }
+  }
 
   type REQ = Request
 
@@ -69,6 +78,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
   object FileNumberValidator   extends RangeValidator(0x0001, 0xffff, "file number")
   object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")
+  object
 
   def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] =
     for {
