@@ -14,15 +14,22 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       writeValue: Array[Byte]
   ) extends super.Request {
 
-    override lazy val size: Int =
+    override lazy val size: Int = java.lang.Short.BYTES * 4 + java.lang.Byte.BYTES + writeValue.length
 
-    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateRequest(this)
+      } yield {
+        byteBuffer.putShort(readAddress.toShort)
+        byteBuffer.putShort(readQuantity.toShort)
+        byteBuffer.putShort(writeAddress.toShort)
+        byteBuffer.putShort((writeValue.length / 2).toShort)
+        byteBuffer.put(writeValue.length.toByte)
+        byteBuffer.put(writeValue)
+      }
   }
 
-  object Request {
-
-
-  }
+  object Request {}
 
   type REQ = Request
 

@@ -1,10 +1,11 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 import scala.annotation.tailrec
-import scala.language.implicitConversions
+import scala.language.{existentials, implicitConversions}
 
 abstract class ModbusFunction(_code: Int) {
   val code: Byte = _code.toByte
@@ -15,13 +16,19 @@ abstract class ModbusFunction(_code: Int) {
     def size: Int
     def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer]
 
-    def toByteBuffer: Either[String, ByteBuffer] = {
-      val byteBuffer = ByteBuffer.allocate(size + java.lang.Byte.BYTES)
-      byteBuffer.put(code)
+    private lazy val fullSize = size + java.lang.Byte.BYTES
 
-      encode(byteBuffer)
-    }
+    def toByteBuffer: Either[String, ByteBuffer] =
+      for {
+        _ <- RequestSizeValidator.validate(fullSize)
+        byteBuffer = ByteBuffer.allocate(fullSize)
+        _          = byteBuffer.put(code)
+        byteBuffer <- encode(byteBuffer)
+      } yield byteBuffer
+
   }
+
+  object RequestSizeValidator extends RangeValidator(0x0000, 0x00fd, "size")
 
   abstract class Response {
     val function: ModbusFunction = ModbusFunction.this
