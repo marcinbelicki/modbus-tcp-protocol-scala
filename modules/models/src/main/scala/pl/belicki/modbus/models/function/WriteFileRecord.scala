@@ -2,6 +2,7 @@ package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
 import pl.belicki.modbus.models.function.ReadFileRecord.{Request, SubRequest, validateSubRequest}
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 import scala.annotation.tailrec
@@ -42,10 +43,10 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       if (byteBuffer.get() != 0x06) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val fileNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateFileNumber(fileNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!FileNumberValidator.validateBool(fileNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val recordNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      if (!validateRecordNumber(recordNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!RecordNumberValidator.validateBool(recordNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val byteCount    = recordLength * 2
@@ -66,19 +67,16 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  def validateFileNumber(fileNumber: Int): Boolean     = fileNumber >= 0x0001 && fileNumber <= 0xffff
-  def validateRecordNumber(recordNumber: Int): Boolean = recordNumber >= 0x0000 && recordNumber <= 0x270f
+  object FileNumberValidator   extends RangeValidator(0x0001, 0xffff, "file number")
+  object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")
 
-  def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] = {
-    if (!validateFileNumber(subRequest.fileNumber))
-      return Left(s"The file number: ${subRequest.fileNumber} of the request must be inside of the range <0x0001;0xffff>")
-    if (!validateRecordNumber(subRequest.recordNumber))
-      return Left(s"The record number: ${subRequest.recordNumber} of the request must be inside of the range <0x0;0x270f")
-    if (subRequest.recordData.length % 2 != 0)
-      return Left(s"The length of the record data must be even number.")
-
-    Right(subRequest)
-  }
+  def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] =
+    for {
+      _ <- FileNumberValidator.validate(subRequest.fileNumber)
+      _ <- RecordNumberValidator.validate(subRequest.recordNumber)
+      _ <-
+        Either.cond(subRequest.recordData.length % 2 == 0, (), s"The length o the record data: ${subRequest.recordData.length} must be even number.")
+    } yield subRequest
 
   override def validateRequest(request: Request): Either[String, Request] = {
     @tailrec

@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 
@@ -50,13 +51,13 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
     override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
+  object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
+
   override def initialDecodeState: DecodeState = Initial
 
-  override def validateRequest(request: Request): Either[String, Request] = {
-    if (request.address > 0xffff || request.address < 0x0000)
-      return Left(s"The address of the request must be inside of the range <0x0000;0xffff>")
-
-    Right(request)
-  }
+  override def validateRequest(request: Request): Either[String, Request] =
+    for {
+      _ <- AddressValidator.validate(request.address)
+    } yield request
 
 }
