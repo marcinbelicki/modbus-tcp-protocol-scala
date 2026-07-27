@@ -1,7 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
-import pl.belicki.modbus.models.function.WriteMultipleCoils.{Request, validateByteCount, validateQuantity}
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 
@@ -9,9 +9,21 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
 
   case class Request(
       address: Int,
-      quantity: Int,
       value: Array[Byte]
-  ) extends super.Request
+  ) extends super.Request {
+    val quantity: Int           = value.length / 2
+    override lazy val size: Int = java.lang.Short.BYTES * 2 + java.lang.Byte.BYTES + value.length
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateRequest(this)
+      } yield {
+        byteBuffer.putShort(address.toShort)
+        byteBuffer.putShort(quantity.toShort)
+        byteBuffer.put(value.length.toByte)
+        byteBuffer.put(value)
+      }
+  }
 
   type REQ = Request
 
@@ -22,7 +34,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
       val quantity  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
 
-      if (!validateQuantity(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!QuantityValidator.validateBool(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
       if (!validateByteCount(byteCount, quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(ReadArray(address, byteCount, quantity))
@@ -38,7 +50,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
       val value = new Array[Byte](byteCount)
       byteBuffer.get(value)
 
-      Right(FinalState(Request(address, quantity, value)))
+      Right(FinalState(Request(address, value)))
     }
 
     override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
@@ -46,16 +58,14 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  def validateQuantity(quantity: Int): Boolean                  = quantity >= 0x0001 && quantity <= 0x007b
+  object QuantityValidator extends RangeValidator(0x0001, 0x007b, "quantity")
+  object AddressValidator  extends RangeValidator(0x0000, 0xffff, "address")
+
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = (quantity * 2) == byteCount
 
   override def validateRequest(request: Request): Either[String, Request] = for {
-    _ <- Either.cond(
-      validateByteCount(request.value.length, request.quantity),
-      (),
-      s"The length of the value: ${request.value.length} must correspond with the quantity: ${request.quantity}."
-    )
-    _ <- Either.cond(validateQuantity(request.quantity), (), "The quantity must be inside of the range: <1;0x007b>")
-    _ <- Either.cond(request.address <= 0xffff, (), "The address must be inside of the range: <0;0xffff>")
+    _ <- Either.cond(request.value.length % 2 == 0, (), s"The length of the registers value: ${request.value.length} must even number.")
+    _ <- QuantityValidator.validate(request.quantity)
+    _ <- AddressValidator.validate(request.address)
   } yield request
 }
