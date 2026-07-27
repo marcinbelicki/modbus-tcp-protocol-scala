@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 
@@ -10,7 +11,11 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       address: Int,
       quantity: Int,
       value: Array[Byte]
-  ) extends super.Request
+  ) extends super.Request {
+    override def size: Int = ???
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+  }
 
   type REQ = Request
 
@@ -59,6 +64,9 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
     expectedByteCount == byteCount
   }
 
+  object QuantityValidator extends RangeValidator(0x0001, 0x07b0, "quantity")
+  object AddressValidator  extends RangeValidator(0x0000, 0xffff, "address")
+
   def validateQuantity(quantity: Int): Boolean =
     quantity >= 1 && quantity <= 0x07b0
 
@@ -68,7 +76,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       (),
       s"The length of the value: ${request.value.length} must correspond with the quantity: ${request.quantity}."
     )
-    _ <- Either.cond(validateQuantity(request.quantity), (), "The quantity must be inside of the range: <1;0x07b0>")
-    _ <- Either.cond(request.address <= 0xffff, (), "The address must be inside of the range: <0;0xffff>")
+    _ <- QuantityValidator.validate(request.quantity)
+    _ <- AddressValidator.validate(request.address)
   } yield request
 }

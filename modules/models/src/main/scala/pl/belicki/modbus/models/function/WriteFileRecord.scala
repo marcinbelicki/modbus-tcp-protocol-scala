@@ -15,16 +15,32 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       recordData: Array[Byte]
   ) {
     lazy val size: Int = java.lang.Short.BYTES * 3 + recordData.length + java.lang.Byte.BYTES
+
+    def encode(byteBuffer: ByteBuffer): ByteBuffer = {
+      byteBuffer.put(SubRequest.referenceType)
+      byteBuffer.putShort(fileNumber.toShort)
+      byteBuffer.putShort(recordNumber.toShort)
+      byteBuffer.put(recordData)
+    }
+  }
+
+  object SubRequest {
+    val referenceType: Byte = 0x06.toByte
   }
 
   case class Request(
       subRequests: List[SubRequest]
   ) extends super.Request {
-    override lazy val size: Int = subRequests.map(_.size).sum + java.lang.Byte.BYTES
+    val requestDataLength: Int  = subRequests.map(_.size).sum
+    override lazy val size: Int = requestDataLength + java.lang.Byte.BYTES
 
     override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
       for {
-
+        _ <- validateRequest(this)
+      } yield {
+        byteBuffer.put(requestDataLength.toByte)
+        subRequests.foreach(_.encode(byteBuffer))
+        byteBuffer
       }
   }
 
@@ -35,7 +51,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       if (byteBuffer.remaining() < 2) return ExceptionCode.ILLEGAL_DATA_VALUE
       val requestDataLength = java.lang.Byte.toUnsignedInt(byteBuffer.get())
 
-      if (requestDataLength < 0x09 || requestDataLength > 0xfb) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!RequestDataLengthValidator.validateBool(requestDataLength)) return ExceptionCode.ILLEGAL_DATA_VALUE
       if (requestDataLength != byteBuffer.remaining()) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(ReadSubRequests(Nil))
@@ -49,7 +65,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
       if (byteBuffer.remaining() == 0) return Right(FinalState(Request(subRequests.reverse)))
       if (byteBuffer.remaining() < 7) return ExceptionCode.ILLEGAL_DATA_VALUE
-      if (byteBuffer.get() != 0x06) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (byteBuffer.get() != SubRequest.referenceType) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val fileNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       if (!FileNumberValidator.validateBool(fileNumber)) return ExceptionCode.ILLEGAL_DATA_VALUE
@@ -76,9 +92,9 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  object FileNumberValidator   extends RangeValidator(0x0001, 0xffff, "file number")
-  object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")
-  object
+  object FileNumberValidator        extends RangeValidator(0x0001, 0xffff, "file number")
+  object RecordNumberValidator      extends RangeValidator(0x0000, 0x270f, "record number")
+  object RequestDataLengthValidator extends RangeValidator(0x0009, 0x00fb, "request data length", "02X")
 
   def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] =
     for {
@@ -100,7 +116,10 @@ object WriteFileRecord extends ModbusFunction(0x15) {
           if (errors.isEmpty) Right(request) else Left(errors.mkString(System.lineSeparator()))
       }
 
-    helper(request.subRequests, Nil)
+    for {
+      _ <- RequestDataLengthValidator.validate(request.requestDataLength)
+      _ <- helper(request.subRequests, Nil)
+    } yield request
   }
 
 }
