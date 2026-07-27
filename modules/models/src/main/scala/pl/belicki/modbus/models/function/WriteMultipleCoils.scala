@@ -12,9 +12,17 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       quantity: Int,
       value: Array[Byte]
   ) extends super.Request {
-    override def size: Int = ???
+    override lazy val size: Int = java.lang.Short.BYTES * 2 + java.lang.Byte.BYTES + value.length
 
-    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateRequest(this)
+      } yield {
+        byteBuffer.putShort(address.toShort)
+        byteBuffer.putShort(quantity.toShort)
+        byteBuffer.put(value.length.toByte)
+        byteBuffer.put(value)
+      }
   }
 
   type REQ = Request
@@ -27,7 +35,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       val quantity  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
 
-      if (!validateQuantity(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (!QuantityValidator.validateBool(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
       if (!validateByteCount(byteCount, quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       Right(ReadingValue(address, quantity, byteCount))
@@ -66,9 +74,6 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
 
   object QuantityValidator extends RangeValidator(0x0001, 0x07b0, "quantity")
   object AddressValidator  extends RangeValidator(0x0000, 0xffff, "address")
-
-  def validateQuantity(quantity: Int): Boolean =
-    quantity >= 1 && quantity <= 0x07b0
 
   override def validateRequest(request: Request): Either[String, Request] = for {
     _ <- Either.cond(
