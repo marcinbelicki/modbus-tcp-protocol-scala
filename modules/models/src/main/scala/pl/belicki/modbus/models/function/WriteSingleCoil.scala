@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 
@@ -9,15 +10,24 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
   case class Request(
       address: Int,
       value: Boolean
-  ) extends super.Request
+  ) extends super.Request {
+    override def size: Int = java.lang.Short.BYTES * 2
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateRequest(this)
+      } yield {
+        byteBuffer.putShort(address.toShort)
+        byteBuffer.putShort(shortByBoolean(value))
+      }
+
+  }
 
   type REQ = Request
 
   private object Initial extends DecodeState {
-    private val valueMap = Map(
-      0xff00.toShort -> true,
-      0x0000.toShort -> false
-    )
+    private val valueMap = shortByBoolean.map(_.swap)
+
     override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
       if (byteBuffer.remaining() < 4) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -29,7 +39,18 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
     override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
+  object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
+
+  private val shortByBoolean = Map(
+    true  -> 0xff00.toShort,
+    false -> 0x0000.toShort
+  )
+
   override def initialDecodeState: DecodeState = Initial
 
-  override def validateRequest(request: Request): Either[String, Request] = Right(request)
+  override def validateRequest(request: Request): Either[String, Request] = {
+    for {
+      _ <- AddressValidator.validate(request.address)
+    } yield request
+  }
 }
