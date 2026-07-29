@@ -11,7 +11,7 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
       address: Int,
       value: Boolean
   ) extends super.Request {
-    override def size: Int = java.lang.Short.BYTES * 2
+    override def size: Int = Request.size
 
     override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
       for {
@@ -20,6 +20,11 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
         byteBuffer.putShort(address.toShort)
         byteBuffer.putShort(shortByBoolean(value))
       }
+
+  }
+
+  object Request {
+    val size: Int = java.lang.Short.BYTES * 2
 
   }
 

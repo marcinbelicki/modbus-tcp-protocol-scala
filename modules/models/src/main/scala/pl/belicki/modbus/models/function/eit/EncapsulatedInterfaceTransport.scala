@@ -13,6 +13,21 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
     abstract class Request extends EncapsulatedInterfaceTransport.Request {
       val subFunction: SubFunction = SubFunction.this
+
+      protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer]
+
+      protected def baseSize: Int
+
+      override lazy val size: Int = java.lang.Byte.BYTES + baseSize
+
+      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = {
+        byteBuffer.put(code)
+
+        for {
+          _ <- encodeRest(byteBuffer)
+        } yield byteBuffer
+
+      }
     }
 
     def initialDecodeState: DecodeState
@@ -39,7 +54,15 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     case class Request(
         deviceIdCode: ReadDeviceIdCode,
         objectId: ObjectId
-    ) extends super.Request
+    ) extends super.Request {
+      override protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+        Right {
+          byteBuffer.put(deviceIdCode.getCode)
+          byteBuffer.put(objectId.getCode)
+        }
+
+      override protected lazy val baseSize: Int = java.lang.Byte.BYTES * 2
+    }
 
     private object Initial extends DecodeState {
       override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
@@ -61,8 +84,9 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
   object CANopenGeneralReference extends SubFunction(0x0d) {
 
     case class Request() extends super.Request {
-      override def size: Int                                  = 0
-      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = Right(byteBuffer)
+      override protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = Right(byteBuffer)
+
+      override protected lazy val baseSize: Int = 0
     }
 
     private object Initial extends DecodeState {
