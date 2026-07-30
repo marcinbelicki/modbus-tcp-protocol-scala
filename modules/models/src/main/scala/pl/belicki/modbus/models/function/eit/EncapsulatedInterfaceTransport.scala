@@ -1,7 +1,8 @@
 package pl.belicki.modbus.models.function.eit
 
-import pl.belicki.modbus.models.{EnumUtil, ExceptionCode}
+import pl.belicki.modbus.models.ExceptionCode
 import pl.belicki.modbus.models.function.ModbusFunction
+import pl.belicki.modbus.models.util.EnumUtil
 
 import java.nio.ByteBuffer
 

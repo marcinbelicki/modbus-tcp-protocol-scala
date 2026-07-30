@@ -1,6 +1,6 @@
 package pl.belicki.modbus.models.function.eit
 
-import pl.belicki.modbus.models.EnumUtil
+import pl.belicki.modbus.models.util.EnumUtil
 
 trait ObjectId {
 

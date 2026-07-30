@@ -18,7 +18,7 @@ public enum ExceptionCode {
         this.code = (byte) _code;
     }
 
-    final byte getCode() {
+    final public byte getCode() {
         return this.code;
     }
 }

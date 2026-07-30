@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.util.SpacedHex
 import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
@@ -63,8 +64,8 @@ abstract class ModbusFunction(_code: Int) {
   def initialDecodeState: DecodeState
   def validateRequest(request: REQ): Either[String, REQ]
 
-  final def decodeRequest(bytes: Array[Byte]): Either[Error, REQ] =
-    decodeRequest(ByteBuffer.wrap(bytes))
+  final def decodeHexRequest(hex: String): Either[Error, REQ]     = decodeRequest(SpacedHex.parseHex(hex))
+  final def decodeRequest(bytes: Array[Byte]): Either[Error, REQ] = decodeRequest(ByteBuffer.wrap(bytes))
 
   final def decodeRequest(byteBuffer: ByteBuffer): Either[Error, REQ] = {
     @tailrec

@@ -1,4 +1,6 @@
-package pl.belicki.modbus.models
+package pl.belicki.modbus.models.util
+
+import pl.belicki.modbus.models.ExceptionCode
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -6,13 +8,14 @@ abstract class EnumUtil[E <: Enum[E]: ClassTag, A] {
   protected def getCode(e: E): A
   protected def viewCode(a: A): String
 
-  val valueByCode: Map[A, E] =
-    classTag[E].getClass.asInstanceOf[Class[E]].getEnumConstants.groupBy(getCode)
+  val valueByCode: Map[A, E] = {
+    classTag[E].runtimeClass.asInstanceOf[Class[E]].getEnumConstants.groupBy(getCode)
       .map {
         case (code, Array(single)) => code -> single
         case (code, values)        =>
           throw new IllegalStateException(s"Too many values: ${values.mkString("Array(", ", ", ")")} for code: ${viewCode(code)}")
       }
+  }
 
   def getOrElseIllegal(code: A): Either[ExceptionCode, E] =
     valueByCode.get(code).toRight(ExceptionCode.ILLEGAL_DATA_VALUE)
