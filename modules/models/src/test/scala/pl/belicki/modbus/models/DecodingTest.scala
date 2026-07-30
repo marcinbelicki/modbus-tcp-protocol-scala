@@ -13,12 +13,16 @@ class DecodingTest extends AnyWordSpecLike {
 
   "ReadCoils" must {
     "be properly decoded and encoded" in {
+      // when
       val Right(request) = ReadCoils.decodeHexRequest("00 FF 00 01"): @unchecked
 
+      // then
       request shouldBe ReadCoils.Request(255, 1)
 
+      // when
       val Right(byteBuffer) = request.toByteBuffer: @unchecked
 
+      // then
       byteBuffer.array() shouldBe SpacedHex.parseHex("01 00 FF 00 01")
     }
 
