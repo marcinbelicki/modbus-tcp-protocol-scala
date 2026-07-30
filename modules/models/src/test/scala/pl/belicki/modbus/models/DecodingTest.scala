@@ -27,7 +27,10 @@ class DecodingTest extends AnyWordSpecLike {
     }
 
     "be properly decoded and encoded for example from documentation" in {
+      // when
       val Right(request) = ReadCoils.decodeHexRequest("00 13 00 13")
+
+      // then
       request shouldBe ReadCoils.Request(19, 19)
     }
   }
