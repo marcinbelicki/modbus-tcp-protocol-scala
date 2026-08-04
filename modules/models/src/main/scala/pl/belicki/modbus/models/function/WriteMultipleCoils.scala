@@ -28,7 +28,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
   type REQ = Request
 
   private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() < 5) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val address   = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -42,12 +42,12 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
 
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class ReadingValue(address: Int, quantity: Int, byteCount: Int) extends DecodeState {
 
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val value = new Array[Byte](byteCount)
@@ -56,7 +56,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       Right(FinalState(Request(address, quantity, value)))
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   override def initialDecodeState: DecodeState = Initial

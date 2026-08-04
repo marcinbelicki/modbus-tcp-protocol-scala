@@ -1,7 +1,7 @@
 package pl.belicki.modbus.models.function.eit
 
 import pl.belicki.modbus.models.ExceptionCode
-import pl.belicki.modbus.models.function.ModbusFunction
+import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction}
 import pl.belicki.modbus.models.util.EnumUtil
 
 import java.nio.ByteBuffer
@@ -66,7 +66,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     }
 
     private object Initial extends DecodeState {
-      override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+      override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
         if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
 
         for {
@@ -76,7 +76,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
       }
 
-      override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+      override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
     }
 
     override def initialDecodeState: DecodeState = Initial
@@ -91,9 +91,9 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     }
 
     private object Initial extends DecodeState {
-      override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = ExceptionCode.SERVER_DEVICE_FAILURE
+      override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = ExceptionCode.SERVER_DEVICE_FAILURE
 
-      override def toReq: Either[Error, Request] = Right(Request())
+      override def toReq: Either[ModbusError, Request] = Right(Request())
     }
 
     override def initialDecodeState: DecodeState = Initial
@@ -102,7 +102,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
   type REQ = Request
 
   private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() < 1) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val code = byteBuffer.get()
@@ -113,7 +113,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       }
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   object ReadDeviceIdCode extends EnumUtil[ReadDeviceIdCode, Byte] {

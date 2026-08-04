@@ -28,7 +28,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
   type REQ = Request
 
   private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() < 5) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address   = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val quantity  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -40,11 +40,11 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
       Right(ReadArray(address, byteCount, quantity))
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class ReadArray(address: Int, byteCount: Int, quantity: Int) extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val value = new Array[Byte](byteCount)
@@ -53,7 +53,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
       Right(FinalState(Request(address, value)))
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   override def initialDecodeState: DecodeState = Initial

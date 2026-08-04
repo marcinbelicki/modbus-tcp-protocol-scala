@@ -1,0 +1,45 @@
+package pl.belicki.modbus.models
+
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.prop.TableDrivenPropertyChecks.forAll
+import org.scalatest.prop.Tables.Table
+import org.scalatest.wordspec.AnyWordSpecLike
+import pl.belicki.modbus.models.function.{MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs}
+import pl.belicki.modbus.models.util.SpacedHex
+
+class DecodingEncodingTest extends AnyWordSpecLike {
+
+  private val hexWithRequests =
+    Table(
+      ("hex", "expectedRequest"),
+      ("01 00 13 00 13", ReadCoils.Request(19, 19)),
+      ("02 00 C4 00 16", ReadDiscreteInputs.Request(196, 22))
+    )
+
+  private val decoder = ModbusRequestDecoder.ALL_FUNCTIONS
+
+  "ModbusRequestDecoder" must {
+    "properly decode given hex" in {
+
+      // given
+      forAll(hexWithRequests) {
+        (hex, expectedRequest) =>
+          // when
+          val Right(decodedRequest) = decoder.decodeHexRequest(hex): @unchecked
+
+          // then
+          decodedRequest shouldBe expectedRequest
+
+          // when
+          val Right(byteBuffer) = decodedRequest.toByteBuffer: @unchecked
+
+          // then
+          SpacedHex.parseHex(hex) shouldBe byteBuffer.array()
+
+          println(s"${Console.GREEN}Properly decoded/encoded ${expectedRequest.function.getClass.getSimpleName} request from hex: $hex to $expectedRequest ${Console.RESET}")
+      }
+    }
+
+  }
+
+}

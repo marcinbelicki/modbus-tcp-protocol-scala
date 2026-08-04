@@ -33,15 +33,15 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
   private object Initial extends DecodeState {
     private val valueMap = shortByBoolean.map(_.swap)
 
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() < 4) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       for {
-        value <- valueMap.get(byteBuffer.getShort).toRight(Error(ExceptionCode.ILLEGAL_DATA_VALUE))
+        value <- valueMap.get(byteBuffer.getShort).toRight(ExceptionCode.ILLEGAL_DATA_VALUE)
       } yield FinalState(Request(address, value))
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")

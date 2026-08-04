@@ -46,7 +46,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
   type REQ = Request
 
   private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (byteBuffer.remaining() < 8) return ExceptionCode.ILLEGAL_DATA_VALUE
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
       if ((byteCount % 7) != 0) return ExceptionCode.ILLEGAL_DATA_VALUE
@@ -59,12 +59,12 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   private case class ReadingSubRequests(subRequestCount: Int, subRequests: List[SubRequest]) extends DecodeState {
 
-    override def decode(byteBuffer: ByteBuffer): Either[Error, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
       if (subRequestCount == 0) return Right(FinalState(Request(subRequests.reverse.toArray)))
 
       if (byteBuffer.get() != SubRequest.referenceType) return ExceptionCode.ILLEGAL_DATA_VALUE
@@ -80,7 +80,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests))
     }
 
-    override def toReq: Either[Error, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
+    override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
   override def initialDecodeState: DecodeState = Initial
