@@ -4,7 +4,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
-import pl.belicki.modbus.models.function.{MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs}
+import pl.belicki.modbus.models.function.{MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters, WriteSingleCoil}
 import pl.belicki.modbus.models.util.SpacedHex
 
 class DecodingEncodingTest extends AnyWordSpecLike {
@@ -13,7 +13,11 @@ class DecodingEncodingTest extends AnyWordSpecLike {
     Table(
       ("hex", "expectedRequest"),
       ("01 00 13 00 13", ReadCoils.Request(19, 19)),
-      ("02 00 C4 00 16", ReadDiscreteInputs.Request(196, 22))
+      ("02 00 C4 00 16", ReadDiscreteInputs.Request(196, 22)),
+      ("03 00 6B 00 03", ReadHoldingRegisters.Request(107, 3)),
+      ("04 00 08 00 01", ReadInputRegisters.Request(8, 1)),
+      ("05 00 AC FF 00", WriteSingleCoil.Request(172, value = true))
+
     )
 
   private val decoder = ModbusRequestDecoder.ALL_FUNCTIONS
