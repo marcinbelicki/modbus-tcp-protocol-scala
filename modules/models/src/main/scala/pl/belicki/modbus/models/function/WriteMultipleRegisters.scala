@@ -23,6 +23,11 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
         byteBuffer.put(value.length.toByte)
         byteBuffer.put(value)
       }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case that: Request => address == that.address && value.sameElements(that.value)
+      case _             => false
+    }
   }
 
   type REQ = Request
@@ -59,7 +64,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
   override def initialDecodeState: DecodeState = Initial
 
   object QuantityValidator extends RangeValidator(0x0001, 0x007b, "quantity")
-  object AddressValidator  extends RangeValidator(0x0000, 0xffff, "address")
+  object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = (quantity * 2) == byteCount
 

@@ -41,6 +41,11 @@ object ReadFileRecord extends ModbusFunction(0x14) {
         subRequests.foreach(_.encode(byteBuffer))
         byteBuffer
       }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case that: Request => subRequests.sameElements(that.subRequests)
+      case _             => false
+    }
   }
 
   type REQ = Request
@@ -55,8 +60,9 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       val subRequestCount = byteCount / 7
       if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
-      Right(ReadingSubRequests(subRequestCount, Nil))
+      if (subRequestCount == 0) return Right(FinalState(Request(Array.empty)))
 
+      Right(ReadingSubRequests(subRequestCount, Nil))
     }
 
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
@@ -65,8 +71,6 @@ object ReadFileRecord extends ModbusFunction(0x14) {
   private case class ReadingSubRequests(subRequestCount: Int, subRequests: List[SubRequest]) extends DecodeState {
 
     override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
-      if (subRequestCount == 0) return Right(FinalState(Request(subRequests.reverse.toArray)))
-
       if (byteBuffer.get() != SubRequest.referenceType) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val fileNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -77,6 +81,8 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort())
 
+      if (subRequestCount == 1) return Right(FinalState(Request((SubRequest(fileNumber, recordNumber, recordLength) :: subRequests).reverse.toArray)))
+
       Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests))
     }
 
@@ -85,9 +91,9 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  object FileNumberValidator      extends RangeValidator(0x0001, 0xffff, "file number")
-  object RecordNumberValidator    extends RangeValidator(0x0000, 0x270f, "record number")
-  object RecordLengthValidator    extends RangeValidator(0x0000, 0xffff, "record number")
+  object FileNumberValidator extends RangeValidator(0x0001, 0xffff, "file number")
+  object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")
+  object RecordLengthValidator extends RangeValidator(0x0000, 0xffff, "record number")
   object SubRequestsSizeValidator extends RangeValidator(0x07, 0xf5, "sub requests size", "02X")
 
   def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] =
