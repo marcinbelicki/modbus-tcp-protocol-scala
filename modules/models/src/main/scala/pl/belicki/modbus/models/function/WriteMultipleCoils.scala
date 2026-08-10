@@ -23,6 +23,11 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
         byteBuffer.put(value.length.toByte)
         byteBuffer.put(value)
       }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case that: Request => address == that.address && quantity == that.quantity && value.sameElements(that.value)
+      case _             => false
+    }
   }
 
   type REQ = Request
@@ -73,7 +78,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
   }
 
   object QuantityValidator extends RangeValidator(0x0001, 0x07b0, "quantity")
-  object AddressValidator  extends RangeValidator(0x0000, 0xffff, "address")
+  object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 
   override def validateRequest(request: Request): Either[String, Request] = for {
     _ <- Either.cond(
