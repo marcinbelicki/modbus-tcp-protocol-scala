@@ -31,6 +31,7 @@ class DecodingEncodingTest extends AnyWordSpecLike {
         "15 0D 06 00 04 00 07 00 03 06 AF 04 BE 10 0D",
         WriteFileRecord.Request(List(WriteFileRecord.SubRequest(4, 7, SpacedHex.parseHex("06 AF 04 BE 10 0D"))))
       ),
+      ("16 00 04 00 F2 00 25", MaskWriteRegister.Request(4, 0xf2, 0x25))
     )
 
   private val decoder = ModbusRequestDecoder.ALL_FUNCTIONS
