@@ -27,6 +27,12 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
         byteBuffer.put(writeValue.length.toByte)
         byteBuffer.put(writeValue)
       }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case that: Request => readAddress == that.readAddress && readQuantity == that.readQuantity && writeAddress == that.writeAddress &&
+        writeValue.sameElements(that.writeValue)
+      case _ => false
+    }
   }
 
   object Request {}
@@ -69,9 +75,9 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = byteCount == quantity * 2
 
-  object ReadAddressValidator   extends RangeValidator(0x0000, 0xffff, "read address")
-  object ReadQuantityValidator  extends RangeValidator(0x0001, 0x007d, "read quantity")
-  object WriteAddressValidator  extends RangeValidator(0x0000, 0xffff, "write address")
+  object ReadAddressValidator extends RangeValidator(0x0000, 0xffff, "read address")
+  object ReadQuantityValidator extends RangeValidator(0x0001, 0x007d, "read quantity")
+  object WriteAddressValidator extends RangeValidator(0x0000, 0xffff, "write address")
   object WriteQuantityValidator extends RangeValidator(0x0001, 0x0079, "write quantity")
 
   override def validateRequest(request: Request): Either[String, Request] =
