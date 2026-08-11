@@ -28,7 +28,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
   }
 
   case class Request(
-      subRequests: Array[SubRequest]
+      subRequests: List[SubRequest]
   ) extends super.Request {
     lazy val subRequestsSize: Int = subRequests.length * SubRequest.size
     override lazy val size: Int   = subRequestsSize + java.lang.Byte.BYTES
@@ -42,10 +42,6 @@ object ReadFileRecord extends ModbusFunction(0x14) {
         byteBuffer
       }
 
-    override def equals(obj: Any): Boolean = obj match {
-      case that: Request => subRequests.sameElements(that.subRequests)
-      case _             => false
-    }
   }
 
   type REQ = Request
@@ -60,7 +56,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       val subRequestCount = byteCount / 7
       if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
-      if (subRequestCount == 0) return Right(FinalState(Request(Array.empty)))
+      if (subRequestCount == 0) return Right(FinalState(Request(Nil)))
 
       Right(ReadingSubRequests(subRequestCount, Nil))
     }
@@ -81,7 +77,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort())
 
-      if (subRequestCount == 1) return Right(FinalState(Request((SubRequest(fileNumber, recordNumber, recordLength) :: subRequests).reverse.toArray)))
+      if (subRequestCount == 1) return Right(FinalState(Request((SubRequest(fileNumber, recordNumber, recordLength) :: subRequests).reverse)))
 
       Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests))
     }
