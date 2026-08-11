@@ -20,7 +20,13 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       byteBuffer.put(SubRequest.referenceType)
       byteBuffer.putShort(fileNumber.toShort)
       byteBuffer.putShort(recordNumber.toShort)
+      byteBuffer.putShort((recordData.length / 2).toShort)
       byteBuffer.put(recordData)
+    }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case that: SubRequest => fileNumber == that.fileNumber && recordNumber == that.recordNumber && recordData.sameElements(that.recordData)
+      case _                => false
     }
   }
 
@@ -63,7 +69,6 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
   private case class ReadSubRequests(subRequests: List[SubRequest]) extends DecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
-      if (byteBuffer.remaining() == 0) return Right(FinalState(Request(subRequests.reverse)))
       if (byteBuffer.remaining() < 7) return ExceptionCode.ILLEGAL_DATA_VALUE
       if (byteBuffer.get() != SubRequest.referenceType) return ExceptionCode.ILLEGAL_DATA_VALUE
 
@@ -75,16 +80,15 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val byteCount    = recordLength * 2
-      if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (byteBuffer.remaining() < byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val recordData = new Array[Byte](byteCount)
       byteBuffer.get(recordData)
 
-      Right(
-        ReadSubRequests(
-          SubRequest(fileNumber, recordNumber, recordData) :: subRequests
-        )
-      )
+      val newSubRequests = SubRequest(fileNumber, recordNumber, recordData) :: subRequests
+      if (byteBuffer.remaining() == 0) return Right(FinalState(Request(newSubRequests.reverse)))
+
+      Right(ReadSubRequests(newSubRequests))
     }
 
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
@@ -92,8 +96,8 @@ object WriteFileRecord extends ModbusFunction(0x15) {
 
   override def initialDecodeState: DecodeState = Initial
 
-  object FileNumberValidator        extends RangeValidator(0x0001, 0xffff, "file number")
-  object RecordNumberValidator      extends RangeValidator(0x0000, 0x270f, "record number")
+  object FileNumberValidator extends RangeValidator(0x0001, 0xffff, "file number")
+  object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")
   object RequestDataLengthValidator extends RangeValidator(0x0009, 0x00fb, "request data length", "02X")
 
   def validateSubRequest(subRequest: SubRequest): Either[String, SubRequest] =
