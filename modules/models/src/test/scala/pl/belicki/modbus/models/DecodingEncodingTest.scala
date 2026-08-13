@@ -4,8 +4,9 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
+import pl.belicki.modbus.models.function.eit.{DefinedObjectId, EncapsulatedInterfaceTransport, ReadDeviceIdCode}
 import pl.belicki.modbus.models.function.{
-  MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs, ReadFileRecord, ReadHoldingRegisters, ReadInputRegisters,
+  MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs, ReadFIFOQueue, ReadFileRecord, ReadHoldingRegisters, ReadInputRegisters,
   ReadWriteMultipleRegisters, WriteFileRecord, WriteMultipleCoils, WriteMultipleRegisters, WriteSingleCoil, WriteSingleRegister
 }
 import pl.belicki.modbus.models.util.SpacedHex
@@ -32,7 +33,11 @@ class DecodingEncodingTest extends AnyWordSpecLike {
         WriteFileRecord.Request(List(WriteFileRecord.SubRequest(4, 7, SpacedHex("06 AF 04 BE 10 0D"))))
       ),
       ("16 00 04 00 F2 00 25",                            MaskWriteRegister.Request(4, 0xf2, 0x25)),
-      ("17 00 03 00 06 00 0E 00 03 06 00 FF 00 FF 00 FF", ReadWriteMultipleRegisters.Request(3, 6, 14, SpacedHex("00 FF 00 FF 00 FF")))
+      ("17 00 03 00 06 00 0E 00 03 06 00 FF 00 FF 00 FF", ReadWriteMultipleRegisters.Request(3, 6, 14, SpacedHex("00 FF 00 FF 00 FF"))),
+      ("18 04 DE",                                        ReadFIFOQueue.Request(1246)),
+      ("2B 0E 01 00", EncapsulatedInterfaceTransport.ReadDeviceIdentification.Request(ReadDeviceIdCode.Basic, DefinedObjectId.VendorName)),
+      ("2B 0E 01 02", EncapsulatedInterfaceTransport.ReadDeviceIdentification.Request(ReadDeviceIdCode.Basic, DefinedObjectId.MajorMinorRevision)),
+      ("2B 0D",       EncapsulatedInterfaceTransport.CANopenGeneralReference.Request())
     )
 
   private val decoder = ModbusRequestDecoder.ALL_FUNCTIONS
