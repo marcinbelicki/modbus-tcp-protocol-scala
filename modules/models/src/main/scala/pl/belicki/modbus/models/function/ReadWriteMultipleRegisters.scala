@@ -71,7 +71,7 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = byteCount == quantity * 2
 

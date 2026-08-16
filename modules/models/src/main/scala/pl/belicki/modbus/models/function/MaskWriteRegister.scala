@@ -53,7 +53,7 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
 
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   override def validateRequest(request: Request): Either[String, Request] =
     for {

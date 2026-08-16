@@ -51,7 +51,7 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
     false -> 0x0000.toShort
   )
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   override def validateRequest(request: Request): Either[String, Request] = {
     for {

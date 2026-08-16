@@ -57,7 +57,7 @@ abstract class ModbusFunction(_code: Int) {
     override def toReq: Either[ModbusError, REQ] = Right(request)
   }
 
-  def initialDecodeState: RequestDecodeState
+  def initialRequestDecodeState: RequestDecodeState
   def validateRequest(request: REQ): Either[String, REQ]
 
   final def decodeHexRequest(hex: String): Either[ModbusError, REQ]     = decodeRequest(SpacedHex.parseHex(hex))
@@ -74,7 +74,9 @@ abstract class ModbusFunction(_code: Int) {
         }
       }
 
-    helper(initialDecodeState)
+    helper(initialRequestDecodeState)
   }
+
+  trait
 
 }

@@ -61,7 +61,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   object QuantityValidator extends RangeValidator(0x0001, 0x007b, "quantity")
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")

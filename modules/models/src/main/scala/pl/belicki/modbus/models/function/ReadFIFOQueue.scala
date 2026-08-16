@@ -30,7 +30,7 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: ReadFIFOQueue.RequestDecodeState = Initial
+  override def initialRequestDecodeState: ReadFIFOQueue.RequestDecodeState = Initial
 
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 

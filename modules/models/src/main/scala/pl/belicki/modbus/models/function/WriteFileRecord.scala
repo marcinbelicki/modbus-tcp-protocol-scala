@@ -94,7 +94,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   object FileNumberValidator extends RangeValidator(0x0001, 0xffff, "file number")
   object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")

@@ -40,7 +40,7 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
       ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 
