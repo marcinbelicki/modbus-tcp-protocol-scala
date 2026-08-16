@@ -33,7 +33,7 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val value   = byteBuffer.getShort
 
-      Right(FinalState(Request(address, value)))
+      Right(RequestFinalState(Request(address, value)))
     }
 
     override def toReq: Either[ModbusError, Request] =

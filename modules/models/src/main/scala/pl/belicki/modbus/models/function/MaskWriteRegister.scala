@@ -38,7 +38,7 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
       val andMask, orMask = byteBuffer.getShort
 
       Right(
-        FinalState(
+        RequestFinalState(
           Request(
             address,
             andMask,

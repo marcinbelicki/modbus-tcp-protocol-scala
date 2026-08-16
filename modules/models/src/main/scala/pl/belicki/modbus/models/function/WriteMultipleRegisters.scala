@@ -55,7 +55,7 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
       val value = new Array[Byte](byteCount)
       byteBuffer.get(value)
 
-      Right(FinalState(Request(address, value)))
+      Right(RequestFinalState(Request(address, value)))
     }
 
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE

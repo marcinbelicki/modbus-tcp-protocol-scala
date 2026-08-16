@@ -72,7 +72,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         for {
           readDeviceIdCode <- ReadDeviceIdCode.getOrElseIllegal(byteBuffer.get())
           objectId = ObjectId(byteBuffer.get())
-        } yield FinalState(Request(readDeviceIdCode, objectId))
+        } yield RequestFinalState(Request(readDeviceIdCode, objectId))
 
       }
 

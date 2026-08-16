@@ -24,7 +24,7 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
     override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
-      Right(FinalState(Request(address)))
+      Right(RequestFinalState(Request(address)))
     }
 
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE

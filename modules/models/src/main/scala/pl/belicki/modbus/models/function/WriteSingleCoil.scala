@@ -38,7 +38,7 @@ object WriteSingleCoil extends ModbusFunction(0x05) {
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       for {
         value <- valueMap.get(byteBuffer.getShort).toRight(ExceptionCode.ILLEGAL_DATA_VALUE)
-      } yield FinalState(Request(address, value))
+      } yield RequestFinalState(Request(address, value))
     }
 
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE

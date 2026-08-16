@@ -18,7 +18,7 @@ trait ReadAddressQuantity {
 
       if (!quantityValidator.validateBool(quantity)) return ExceptionCode.ILLEGAL_DATA_VALUE
 
-      Right(FinalState(toRequest(address, quantity)))
+      Right(RequestFinalState(toRequest(address, quantity)))
     }
 
     override def toReq: Either[ModbusError, REQ] = ExceptionCode.ILLEGAL_DATA_VALUE

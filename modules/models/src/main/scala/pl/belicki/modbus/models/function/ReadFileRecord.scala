@@ -56,7 +56,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       val subRequestCount = byteCount / 7
       if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
-      if (subRequestCount == 0) return Right(FinalState(Request(Nil)))
+      if (subRequestCount == 0) return Right(RequestFinalState(Request(Nil)))
 
       Right(ReadingSubRequests(subRequestCount, Nil))
     }
@@ -77,7 +77,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
       val recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort())
 
-      if (subRequestCount == 1) return Right(FinalState(Request((SubRequest(fileNumber, recordNumber, recordLength) :: subRequests).reverse)))
+      if (subRequestCount == 1) return Right(RequestFinalState(Request((SubRequest(fileNumber, recordNumber, recordLength) :: subRequests).reverse)))
 
       Right(ReadingSubRequests(subRequestCount - 1, SubRequest(fileNumber, recordNumber, recordLength) :: subRequests))
     }

@@ -58,7 +58,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
       val value = new Array[Byte](byteCount)
       byteBuffer.get(value)
 
-      Right(FinalState(Request(address, quantity, value)))
+      Right(RequestFinalState(Request(address, quantity, value)))
     }
 
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
