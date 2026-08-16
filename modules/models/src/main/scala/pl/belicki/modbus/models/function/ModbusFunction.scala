@@ -77,6 +77,37 @@ abstract class ModbusFunction(_code: Int) {
     helper(initialRequestDecodeState)
   }
 
-  trait
+  trait ResponseDecodeState {
+    def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState]
+
+    def toRes: Either[String, RES]
+  }
+
+  protected case class ResponseFinalState(response: RES) extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] =
+      Left("Tried to read another bytes even though the decoder reached final state.")
+
+    override def toRes: Either[String, RES] = Right(response)
+  }
+
+  def initialResponseDecodeState: ResponseDecodeState
+  def validateResponse(response: RES): Either[String, RES]
+
+  final def decodeHexResponse(hex: String): Either[String, RES]     = decodeResponse(SpacedHex.parseHex(hex))
+  final def decodeResponse(bytes: Array[Byte]): Either[String, RES] = decodeResponse(ByteBuffer.wrap(bytes))
+
+  final def decodeResponse(byteBuffer: ByteBuffer): Either[String, RES] = {
+    @tailrec
+    def helper(state: ResponseDecodeState): Either[String, RES] =
+      if (byteBuffer.remaining() <= 0) state.toRes
+      else {
+        state.decode(byteBuffer) match {
+          case Right(newState) => helper(newState)
+          case Left(error)     => Left(error)
+        }
+      }
+
+    helper(initialResponseDecodeState)
+  }
 
 }

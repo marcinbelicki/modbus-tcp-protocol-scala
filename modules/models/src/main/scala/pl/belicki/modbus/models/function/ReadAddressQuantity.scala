@@ -24,7 +24,7 @@ trait ReadAddressQuantity {
     override def toReq: Either[ModbusError, REQ] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: RequestDecodeState = Initial
+  override def initialRequestDecodeState: RequestDecodeState = Initial
 
   protected def getAddress(request: REQ): Int
   protected def getQuantity(request: REQ): Int

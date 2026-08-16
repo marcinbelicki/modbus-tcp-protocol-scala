@@ -31,7 +31,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       }
     }
 
-    def initialDecodeState: RequestDecodeState
+    def initialRequestDecodeState: RequestDecodeState
 
   }
 
@@ -79,7 +79,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
     }
 
-    override def initialDecodeState: RequestDecodeState = Initial
+    override def initialRequestDecodeState: RequestDecodeState = Initial
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
@@ -96,7 +96,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       override def toReq: Either[ModbusError, Request] = Right(Request())
     }
 
-    override def initialDecodeState: RequestDecodeState = Initial
+    override def initialRequestDecodeState: RequestDecodeState = Initial
   }
 
   type REQ = Request
@@ -108,7 +108,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       val code = byteBuffer.get()
 
       SubFunction.subFunctionByCode.get(code) match {
-        case Some(subFunction) => Right(subFunction.initialDecodeState)
+        case Some(subFunction) => Right(subFunction.initialRequestDecodeState)
         case None              => ExceptionCode.ILLEGAL_DATA_VALUE
       }
     }
