@@ -46,8 +46,8 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   type REQ = Request
 
-  private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+  private object Initial extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() < 8) return ExceptionCode.ILLEGAL_DATA_VALUE
       val byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get())
       if ((byteCount % 7) != 0) return ExceptionCode.ILLEGAL_DATA_VALUE
@@ -64,9 +64,9 @@ object ReadFileRecord extends ModbusFunction(0x14) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  private case class ReadingSubRequests(subRequestCount: Int, subRequests: List[SubRequest]) extends DecodeState {
+  private case class ReadingSubRequests(subRequestCount: Int, subRequests: List[SubRequest]) extends RequestDecodeState {
 
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.get() != SubRequest.referenceType) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val fileNumber = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -85,7 +85,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: DecodeState = Initial
+  override def initialDecodeState: RequestDecodeState = Initial
 
   object FileNumberValidator extends RangeValidator(0x0001, 0xffff, "file number")
   object RecordNumberValidator extends RangeValidator(0x0000, 0x270f, "record number")

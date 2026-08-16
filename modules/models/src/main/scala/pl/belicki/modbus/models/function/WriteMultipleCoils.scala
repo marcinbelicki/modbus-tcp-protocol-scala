@@ -32,8 +32,8 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
 
   type REQ = Request
 
-  private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+  private object Initial extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() < 5) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val address   = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -50,9 +50,9 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  private case class ReadingValue(address: Int, quantity: Int, byteCount: Int) extends DecodeState {
+  private case class ReadingValue(address: Int, quantity: Int, byteCount: Int) extends RequestDecodeState {
 
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() != byteCount) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val value = new Array[Byte](byteCount)
@@ -64,7 +64,7 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: DecodeState = Initial
+  override def initialDecodeState: RequestDecodeState = Initial
 
   def validateByteCount(byteCount: Int, quantity: Int): Boolean = {
     lazy val fullBytes = quantity / 8

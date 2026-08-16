@@ -20,8 +20,8 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
 
   override type REQ = Request
 
-  private case object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+  private case object Initial extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       Right(FinalState(Request(address)))
@@ -30,7 +30,7 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: ReadFIFOQueue.DecodeState = Initial
+  override def initialDecodeState: ReadFIFOQueue.RequestDecodeState = Initial
 
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 

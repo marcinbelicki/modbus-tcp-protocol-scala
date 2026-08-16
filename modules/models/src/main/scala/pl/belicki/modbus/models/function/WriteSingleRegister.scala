@@ -27,8 +27,8 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
 
   type REQ = Request
 
-  private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+  private object Initial extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() < 4) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val value   = byteBuffer.getShort
@@ -40,7 +40,7 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
       ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: DecodeState = Initial
+  override def initialDecodeState: RequestDecodeState = Initial
 
   object AddressValidator extends RangeValidator(0x0000, 0xffff, "address")
 

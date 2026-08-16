@@ -11,7 +11,7 @@ import scala.language.{existentials, implicitConversions}
 abstract class ModbusFunction(_code: Int) {
   val code: Byte = _code.toByte
 
-  abstract class Request {
+  abstract class Message {
     val function: ModbusFunction = ModbusFunction.this
 
     def size: Int
@@ -21,19 +21,17 @@ abstract class ModbusFunction(_code: Int) {
 
     def toByteBuffer: Either[String, ByteBuffer] =
       for {
-        _ <- RequestSizeValidator.validate(fullSize)
+        _ <- MessageSizeValidator.validate(fullSize)
         byteBuffer = ByteBuffer.allocate(fullSize)
         _          = byteBuffer.put(code)
         byteBuffer <- encode(byteBuffer)
       } yield byteBuffer
-
   }
+  abstract class Request extends Message
 
-  object RequestSizeValidator extends RangeValidator(0x0000, 0x00fd, "size")
+  object MessageSizeValidator extends RangeValidator(0x0000, 0x00fd, "size")
 
-  abstract class Response {
-    val function: ModbusFunction = ModbusFunction.this
-  }
+  abstract class Response extends Message
 
   def error(exceptionCode: ExceptionCode) =
     ModbusError(exceptionCode = exceptionCode, functionCode = errorCode)
@@ -45,20 +43,21 @@ abstract class ModbusFunction(_code: Int) {
   implicit def toEitherError[R](either: Either[ExceptionCode, R]): Either[ModbusError, R] = either.left.map(toError)
 
   type REQ <: Request
+  type RES <: Response
 
-  trait DecodeState {
-    def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState]
+  trait RequestDecodeState {
+    def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState]
 
     def toReq: Either[ModbusError, REQ]
   }
 
-  protected case class FinalState(request: REQ) extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
+  protected case class FinalState(request: REQ) extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = ExceptionCode.ILLEGAL_DATA_VALUE
 
     override def toReq: Either[ModbusError, REQ] = Right(request)
   }
 
-  def initialDecodeState: DecodeState
+  def initialDecodeState: RequestDecodeState
   def validateRequest(request: REQ): Either[String, REQ]
 
   final def decodeHexRequest(hex: String): Either[ModbusError, REQ]     = decodeRequest(SpacedHex.parseHex(hex))
@@ -66,7 +65,7 @@ abstract class ModbusFunction(_code: Int) {
 
   final def decodeRequest(byteBuffer: ByteBuffer): Either[ModbusError, REQ] = {
     @tailrec
-    def helper(state: DecodeState): Either[ModbusError, REQ] =
+    def helper(state: RequestDecodeState): Either[ModbusError, REQ] =
       if (byteBuffer.remaining() <= 0) state.toReq
       else {
         state.decode(byteBuffer) match {

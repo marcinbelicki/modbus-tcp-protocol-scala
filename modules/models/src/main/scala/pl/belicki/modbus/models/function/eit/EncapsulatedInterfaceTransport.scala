@@ -31,7 +31,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       }
     }
 
-    def initialDecodeState: DecodeState
+    def initialDecodeState: RequestDecodeState
 
   }
 
@@ -65,8 +65,8 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       override protected lazy val baseSize: Int = java.lang.Byte.BYTES * 2
     }
 
-    private object Initial extends DecodeState {
-      override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+    private object Initial extends RequestDecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
         if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
 
         for {
@@ -79,7 +79,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
     }
 
-    override def initialDecodeState: DecodeState = Initial
+    override def initialDecodeState: RequestDecodeState = Initial
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
@@ -90,19 +90,19 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       override protected lazy val baseSize: Int = 0
     }
 
-    private object Initial extends DecodeState {
-      override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = ExceptionCode.SERVER_DEVICE_FAILURE
+    private object Initial extends RequestDecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = ExceptionCode.SERVER_DEVICE_FAILURE
 
       override def toReq: Either[ModbusError, Request] = Right(Request())
     }
 
-    override def initialDecodeState: DecodeState = Initial
+    override def initialDecodeState: RequestDecodeState = Initial
   }
 
   type REQ = Request
 
-  private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+  private object Initial extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() < 1) return ExceptionCode.ILLEGAL_DATA_VALUE
 
       val code = byteBuffer.get()
@@ -122,7 +122,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     override protected def viewCode(a: Byte): String = String.format("%02X", a)
   }
 
-  override def initialDecodeState: DecodeState = Initial
+  override def initialDecodeState: RequestDecodeState = Initial
 
   override def validateRequest(request: Request): Either[String, Request] = Right(request)
 }

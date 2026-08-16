@@ -10,8 +10,8 @@ trait ReadAddressQuantity {
 
   def toRequest(address: Int, quantity: Int): REQ
 
-  private object Initial extends DecodeState {
-    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, DecodeState] = {
+  private object Initial extends RequestDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
       if (byteBuffer.remaining() != 4) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address  = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val quantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
@@ -24,7 +24,7 @@ trait ReadAddressQuantity {
     override def toReq: Either[ModbusError, REQ] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  override def initialDecodeState: DecodeState = Initial
+  override def initialDecodeState: RequestDecodeState = Initial
 
   protected def getAddress(request: REQ): Int
   protected def getQuantity(request: REQ): Int

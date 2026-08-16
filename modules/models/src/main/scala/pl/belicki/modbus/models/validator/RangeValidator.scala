@@ -13,6 +13,6 @@ class RangeValidator(
     Either.cond(
       validateBool(value),
       (),
-      String.format(s"The %s of the request: 0x%08X must be inside of the range <0x%$numberFormat;0x%$numberFormat>", paramName, value, min, max)
+      String.format(s"The %s of the message: 0x%08X must be inside of the range <0x%$numberFormat;0x%$numberFormat>", paramName, value, min, max)
     )
 }
