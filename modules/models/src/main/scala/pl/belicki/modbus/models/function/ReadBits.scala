@@ -7,4 +7,6 @@ trait ReadBits extends ReadAddressQuantity {
 
   override lazy val quantityValidator: RangeValidator = new RangeValidator(0x0001, 0x07d0, "quantity")
 
+  override def validateByteCount(byteCount: Int): Either[String, Unit] = Right(())
+
 }

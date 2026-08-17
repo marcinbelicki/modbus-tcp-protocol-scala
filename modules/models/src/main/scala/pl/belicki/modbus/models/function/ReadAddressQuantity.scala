@@ -46,6 +46,36 @@ trait ReadAddressQuantity {
       byteBuffer.putShort(getQuantity(request).toShort)
     }
 
+  def toResponse(bytes: Array[Byte]): RES
+  def getByteCount(res: RES): Int
+  def validateByteCount(byteCount: Int): Either[String, Unit]
+
+  private val byteCountLengthValidator = new RangeValidator(0x00, 0xff, "size", "02X")
+
+  private object InitialResponseState extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      for {
+        _ <- Either.cond(byteBuffer.remaining() > 0, (), "Not enough bytes.")
+        byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get)
+        _ <- Either.cond(byteBuffer.remaining() == byteCount, (), "Not enough bytes to read coil status.")
+        _ <- validateByteCount(byteCount)
+        bytes = new Array[Byte](byteCount)
+      } yield {
+        byteBuffer.get(bytes)
+        ResponseFinalState(toResponse(bytes))
+      }
+
+    }
+
+    override def toRes: Either[String, RES] = Left("Can't convert initial state into Response")
+  }
+
+  override def initialResponseDecodeState: ResponseDecodeState = InitialResponseState
+
+  override def validateResponse(response: RES): Either[String, Response] = for {
+    _ <- byteCountLengthValidator.validate(getByteCount(response))
+  } yield response
+
 }
 
 object ReadAddressQuantity {

@@ -20,4 +20,5 @@ object ReadHoldingRegisters extends ModbusFunction(0x03) with ReadRegisters {
   override protected def getAddress(request: Request): Int = request.address
 
   override protected def getQuantity(request: Request): Int = request.quantity
+
 }

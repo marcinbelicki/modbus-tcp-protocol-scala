@@ -7,4 +7,7 @@ trait ReadRegisters extends ReadAddressQuantity {
 
   override lazy val quantityValidator: RangeValidator = new RangeValidator(0x0001, 0x007d, "quantity")
 
+  override def validateByteCount(byteCount: Int): Either[String, Unit] =
+    Either.cond(byteCount % 2 == 0, (), "The byte count must be an even number.")
+
 }
