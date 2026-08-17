@@ -20,4 +20,23 @@ object ReadDiscreteInputs extends ModbusFunction(0x02) with ReadBits {
   override protected def getAddress(request: Request): Int = request.address
 
   override protected def getQuantity(request: Request): Int = request.quantity
+
+  case class Response(
+      inputsStatus: Array[Byte]
+  ) extends super.Request {
+    override def size: Int = inputsStatus.length + java.lang.Byte.BYTES
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {
+      _ <- validateResponse(this)
+    } yield {
+      byteBuffer.put(inputsStatus.length.toByte)
+      byteBuffer.put(inputsStatus)
+    }
+  }
+
+  type RES = Response
+
+  override def toResponse(bytes: Array[Byte]): Response = Response(bytes)
+
+  override def getByteCount(res: Response): Int = res.inputsStatus.length
 }
