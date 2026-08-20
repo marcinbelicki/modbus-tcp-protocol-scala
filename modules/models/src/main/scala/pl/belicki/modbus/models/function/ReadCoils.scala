@@ -23,7 +23,7 @@ object ReadCoils extends ModbusFunction(0x01) with ReadBits {
 
   case class Response(
       coilStatus: Array[Byte]
-  ) extends super.Request {
+  ) extends super.Response {
     override def size: Int = coilStatus.length + java.lang.Byte.BYTES
 
     override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {

@@ -23,7 +23,7 @@ object ReadDiscreteInputs extends ModbusFunction(0x02) with ReadBits {
 
   case class Response(
       inputsStatus: Array[Byte]
-  ) extends super.Request {
+  ) extends super.Response {
     override def size: Int = inputsStatus.length + java.lang.Byte.BYTES
 
     override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {

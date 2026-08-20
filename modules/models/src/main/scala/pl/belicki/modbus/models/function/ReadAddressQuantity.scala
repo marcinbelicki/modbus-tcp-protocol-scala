@@ -72,7 +72,7 @@ trait ReadAddressQuantity {
 
   override def initialResponseDecodeState: ResponseDecodeState = InitialResponseState
 
-  override def validateResponse(response: RES): Either[String, Response] = for {
+  override def validateResponse(response: RES): Either[String, RES] = for {
     _ <- byteCountRangeValidator.validate(getByteCount(response))
     _ <- validateByteCount(getByteCount(response))
   } yield response
