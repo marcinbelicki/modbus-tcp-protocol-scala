@@ -113,7 +113,24 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
     for {
       _ <- SubRequestsSizeValidator.validate(request.subRequestsSize)
-      _ <- helper(request.subRequests.toList, Nil)
+      _ <- helper(request.subRequests, Nil)
     } yield request
   }
+
+  case class SubResponse(
+      recordData: Array[Byte]
+  ) {
+    def size: Int = recordData.length + java.lang.Byte.BYTES * 2
+  }
+
+  case class Response(
+      subResponses: List[SubResponse]
+  ) extends super.Response  {
+
+    override lazy val size: Int = subResponses.map(_.size).sum + java.lang.Byte.SIZE
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+  }
+
+  override def validateResponse(response: ReadFileRecord.RES): Either[String, ReadFileRecord.RES] = ???
 }
