@@ -108,7 +108,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
             case Left(error) => helper(tail, error :: errors)
           }
         case _ =>
-          if (errors.isEmpty) Right(request) else Left(errors.mkString(System.lineSeparator()))
+          if (errors.isEmpty) Right(request) else Left(errors.reverse.mkString(System.lineSeparator()))
       }
 
     for {
@@ -120,17 +120,116 @@ object ReadFileRecord extends ModbusFunction(0x14) {
   case class SubResponse(
       recordData: Array[Byte]
   ) {
-    def size: Int = recordData.length + java.lang.Byte.BYTES * 2
+    lazy val fileRespLength: Int = recordData.length + java.lang.Byte.BYTES
+
+    lazy val size: Int = recordData.length + java.lang.Byte.BYTES * 2
+
+    def encode(byteBuffer: ByteBuffer): ByteBuffer = {
+      byteBuffer.put(fileRespLength.toByte)
+      byteBuffer.put(referenceType)
+      byteBuffer.put(recordData)
+    }
+
   }
 
   case class Response(
       subResponses: List[SubResponse]
-  ) extends super.Response  {
+  ) extends super.Response {
 
-    override lazy val size: Int = subResponses.map(_.size).sum + java.lang.Byte.SIZE
+    val respDataLength: Int = subResponses.map(_.size).sum
 
-    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+    override lazy val size: Int = respDataLength + java.lang.Byte.SIZE
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {
+      _ <- validateResponse(this)
+    } yield {
+      byteBuffer.put(respDataLength.toByte)
+      subResponses.foreach(_.encode(byteBuffer))
+      byteBuffer
+    }
   }
 
-  override def validateResponse(response: ReadFileRecord.RES): Either[String, ReadFileRecord.RES] = ???
+  override type RES = Response
+
+  private val fileRespLengthRangeValidator = new RangeValidator(0x07, 0xf5, "fileRespLength", "02X")
+  private val respDataLengthRangeValidator = new RangeValidator(0x07, 0xf5, "respDataLength", "02X")
+
+  def validateSubResponse(subResponse: SubResponse): Either[String, SubResponse] =
+    for {
+      _ <- fileRespLengthRangeValidator.validate(subResponse.fileRespLength)
+      _ <- Either.cond(
+        subResponse.recordData.length % 2 == 0,
+        (),
+        s"The length of the recordData: ${subResponse.recordData.length} must be an even number"
+      )
+    } yield subResponse
+
+  override def validateResponse(response: Response): Either[String, Response] = {
+
+    @tailrec
+    def helper(subResponses: List[SubResponse], errors: List[String]): Either[String, Response] =
+      subResponses match {
+        case head :: tail => validateSubResponse(head) match {
+            case Right(_)    => helper(tail, errors)
+            case Left(error) => helper(tail, error :: errors)
+          }
+        case _ =>
+          if (errors.isEmpty) Right(response) else Left(errors.reverse.mkString(System.lineSeparator()))
+      }
+
+    for {
+      _ <- respDataLengthRangeValidator.validate(response.respDataLength)
+      _ <- helper(response.subResponses, Nil)
+    } yield response
+  }
+
+  private object InitialResponseDecode extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      val respDataLength = java.lang.Byte.toUnsignedInt(byteBuffer.get())
+      for {
+        _ <- respDataLengthRangeValidator.validate(respDataLength)
+        _ <- Either.cond(
+          respDataLength == byteBuffer.remaining(),
+          (),
+          s"The number of remaining bytes: ${byteBuffer.remaining()} must be equal to respDataLength: $respDataLength."
+        )
+      } yield ReadingSubResponses(Nil)
+
+    }
+
+    override def toRes: Either[String, Response] = Left("Can't convert initial state into Response")
+  }
+
+  private case class ReadingSubResponses(subResponses: List[SubResponse]) extends ResponseDecodeState {
+
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      if (byteBuffer.remaining() < 2) return Left("Too little bytes to read sub response")
+
+      val fileRespLength = byteBuffer.get
+
+      for {
+        _ <- fileRespLengthRangeValidator.validate(fileRespLength)
+        _ <- Either.cond(
+          fileRespLength <= byteBuffer.remaining(),
+          (),
+          s"Too little bytes too read sub response after reading fileRespLength: $fileRespLength."
+        )
+        foundReferenceType = byteBuffer.get
+        _ <- Either.cond(foundReferenceType == referenceType, (), s"The reference type: $foundReferenceType must be equal to $referenceType.")
+        remainingBytesOfSubResponse = fileRespLength - 1
+        _ <- Either.cond(remainingBytesOfSubResponse % 2 == 0, (), s"The number of bytes of the record data must be an even number.")
+        recordData = new Array[Byte](remainingBytesOfSubResponse)
+
+      } yield {
+        byteBuffer.get(recordData)
+
+        if (byteBuffer.remaining() == 0) ResponseFinalState(Response((SubResponse(recordData) :: subResponses).reverse))
+        else ReadingSubResponses(SubResponse(recordData) :: subResponses)
+      }
+    }
+
+    override def toRes: Either[String, Response] = Left("Can't convert to Response from ReadingSubResponses state.")
+  }
+
+  override def initialResponseDecodeState: ResponseDecodeState = InitialResponseDecode
 }

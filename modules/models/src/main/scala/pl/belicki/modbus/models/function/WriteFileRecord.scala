@@ -117,7 +117,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
             case Left(error) => helper(tail, error :: errors)
           }
         case _ =>
-          if (errors.isEmpty) Right(request) else Left(errors.mkString(System.lineSeparator()))
+          if (errors.isEmpty) Right(request) else Left(errors.reverse.mkString(System.lineSeparator()))
       }
 
     for {
