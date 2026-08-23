@@ -89,4 +89,28 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       _ <- WriteQuantityValidator.validate(request.writeValue.length / 2)
     } yield request
 
+  case class Response(
+      registersValue: Array[Byte]
+  ) extends super.Response {
+    override lazy val size: Int = registersValue.length + java.lang.Byte.BYTES
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateResponse(this)
+      } yield {
+        byteBuffer.put(re)
+      }
+  }
+
+  override type RES = Response
+
+  override def initialResponseDecodeState: ReadWriteMultipleRegisters.ResponseDecodeState = ???
+
+  override def validateResponse(response: Response): Either[String, Response] =
+    Either.cond(
+      response.registersValue.length % 2 == 0,
+      response,
+      s"The length of the registersValue: ${response.registersValue.length} must be an even number."
+    )
+
 }
