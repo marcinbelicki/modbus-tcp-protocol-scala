@@ -98,7 +98,7 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       for {
         _ <- validateResponse(this)
       } yield {
-        byteBuffer.put(re)
+        byteBuffer.put(registersValue.length.toByte)
       }
   }
 
@@ -106,11 +106,16 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
   override def initialResponseDecodeState: ReadWriteMultipleRegisters.ResponseDecodeState = ???
 
-  override def validateResponse(response: Response): Either[String, Response] =
-    Either.cond(
-      response.registersValue.length % 2 == 0,
-      response,
-      s"The length of the registersValue: ${response.registersValue.length} must be an even number."
-    )
+  override def validateResponse(response: Response): Either[String, Response] = {
+    for {
+      _ <- Either.cond(
+          response.registersValue.length % 2 == 0,
+          response,
+          s"The length of the registersValue: ${response.registersValue.length} must be an even number."
+        )
+      _ <-
+
+    }
+  }
 
 }
