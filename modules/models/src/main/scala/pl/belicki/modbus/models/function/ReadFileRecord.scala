@@ -151,12 +151,12 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   override type RES = Response
 
-  private val fileRespLengthRangeValidator = new RangeValidator(0x07, 0xf5, "fileRespLength", "02X")
-  private val respDataLengthRangeValidator = new RangeValidator(0x07, 0xf5, "respDataLength", "02X")
+  object FileRespLengthRangeValidator extends RangeValidator(0x07, 0xf5, "fileRespLength", "02X")
+  object RespDataLengthRangeValidator extends RangeValidator(0x07, 0xf5, "respDataLength", "02X")
 
   def validateSubResponse(subResponse: SubResponse): Either[String, SubResponse] =
     for {
-      _ <- fileRespLengthRangeValidator.validate(subResponse.fileRespLength)
+      _ <- FileRespLengthRangeValidator.validate(subResponse.fileRespLength)
       _ <- Either.cond(
         subResponse.recordData.length % 2 == 0,
         (),
@@ -178,7 +178,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       }
 
     for {
-      _ <- respDataLengthRangeValidator.validate(response.respDataLength)
+      _ <- RespDataLengthRangeValidator.validate(response.respDataLength)
       _ <- helper(response.subResponses, Nil)
     } yield response
   }
@@ -187,7 +187,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
     override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
       val respDataLength = java.lang.Byte.toUnsignedInt(byteBuffer.get())
       for {
-        _ <- respDataLengthRangeValidator.validate(respDataLength)
+        _ <- RespDataLengthRangeValidator.validate(respDataLength)
         _ <- Either.cond(
           respDataLength == byteBuffer.remaining(),
           (),
@@ -208,7 +208,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       val fileRespLength = byteBuffer.get
 
       for {
-        _ <- fileRespLengthRangeValidator.validate(fileRespLength)
+        _ <- FileRespLengthRangeValidator.validate(fileRespLength)
         _ <- Either.cond(
           fileRespLength <= byteBuffer.remaining(),
           (),

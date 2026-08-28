@@ -89,6 +89,8 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       _ <- WriteQuantityValidator.validate(request.writeValue.length / 2)
     } yield request
 
+  object RegistersValueLengthValidator extends RangeValidator(0x00, 0xff, "registers value length")
+
   case class Response(
       registersValue: Array[Byte]
   ) extends super.Response {
@@ -99,23 +101,51 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
         _ <- validateResponse(this)
       } yield {
         byteBuffer.put(registersValue.length.toByte)
+        byteBuffer.put(registersValue)
       }
   }
 
   override type RES = Response
 
-  override def initialResponseDecodeState: ReadWriteMultipleRegisters.ResponseDecodeState = ???
+  object InitialDecodeResponse extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      if (byteBuffer.remaining() < 2) return Left("The byte buffer must contain at least 2 bytes.")
+
+      val registersValueLength = java.lang.Byte.toUnsignedInt(byteBuffer.get)
+
+      for {
+        _ <- validateRegistersValueLength(registersValueLength)
+        _ <- Either.cond(
+          byteBuffer.remaining() == registersValueLength,
+          (),
+          s"The number of bytes remaining: ${byteBuffer.remaining()} must be equal to registersValueLength: $registersValueLength"
+        )
+        registersValue = new Array[Byte](registersValueLength)
+
+      } yield {
+        byteBuffer.get(registersValue)
+        ResponseFinalState(Response(registersValue))
+      }
+    }
+
+    override def toRes: Either[String, Response] = ???
+  }
+
+  override def initialResponseDecodeState: ResponseDecodeState = ???
 
   override def validateResponse(response: Response): Either[String, Response] = {
     for {
-      _ <- Either.cond(
-          response.registersValue.length % 2 == 0,
-          response,
-          s"The length of the registersValue: ${response.registersValue.length} must be an even number."
-        )
-      _ <-
+      _ <- validateRegistersValueLength(response.registersValue.length)
+      _ <- RegistersValueLengthValidator.validate(response.registersValue.length)
 
-    }
+    } yield response
   }
 
+  private def validateRegistersValueLength(length: Int) = {
+    Either.cond(
+      length % 2 == 0,
+      (),
+      s"The length of the registersValue: $length must be an even number."
+    )
+  }
 }

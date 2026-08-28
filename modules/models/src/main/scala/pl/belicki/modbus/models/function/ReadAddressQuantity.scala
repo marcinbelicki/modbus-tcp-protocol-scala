@@ -50,7 +50,7 @@ trait ReadAddressQuantity {
   def getByteCount(res: RES): Int
   def validateByteCount(byteCount: Int): Either[String, Unit]
 
-  private val byteCountRangeValidator = new RangeValidator(0x00, 0xff, "size", "02X")
+  object ByteCountRangeValidator extends RangeValidator(0x00, 0xff, "size", "02X")
 
   private object InitialResponseState extends ResponseDecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
@@ -73,7 +73,7 @@ trait ReadAddressQuantity {
   override def initialResponseDecodeState: ResponseDecodeState = InitialResponseState
 
   override def validateResponse(response: RES): Either[String, RES] = for {
-    _ <- byteCountRangeValidator.validate(getByteCount(response))
+    _ <- ByteCountRangeValidator.validate(getByteCount(response))
     _ <- validateByteCount(getByteCount(response))
   } yield response
 

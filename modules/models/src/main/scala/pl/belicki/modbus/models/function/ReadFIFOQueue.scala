@@ -56,12 +56,12 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
 
   override type RES = Response
 
-  private val fifoValueRegisterRangeValidator = new RangeValidator(0, 31, "FIFO count")
+  object FifoValueRegisterRangeValidator extends RangeValidator(0, 31, "FIFO count")
 
   override def validateResponse(response: Response): Either[String, Response] = for {
     _ <- Either.cond(response.fifoValueRegister.length % 2 == 0, (), "The length of the fifo value register must be an even number.")
     fifoCount = response.fifoValueRegister.length / 2
-    _ <- fifoValueRegisterRangeValidator.validate(fifoCount)
+    _ <- FifoValueRegisterRangeValidator.validate(fifoCount)
   } yield response
 
   private object InitialResponseDecode extends ResponseDecodeState {
@@ -73,10 +73,14 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
       val fifoCount = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
 
       for {
-        _ <- fifoValueRegisterRangeValidator.validate(fifoCount)
+        _ <- FifoValueRegisterRangeValidator.validate(fifoCount)
         fifoValueRegisterLength = fifoCount * 2
-        _ <- Either.cond(byteBuffer.remaining() == fifoValueRegisterLength, (), s"The remaining bytes: ${byteBuffer.remaining()} must be equal to $fifoValueRegisterLength.")
-      } yield  {
+        _ <- Either.cond(
+          byteBuffer.remaining() == fifoValueRegisterLength,
+          (),
+          s"The remaining bytes: ${byteBuffer.remaining()} must be equal to $fifoValueRegisterLength."
+        )
+      } yield {
         val fifoValueRegister = new Array[Byte](fifoValueRegisterLength)
         byteBuffer.get(fifoValueRegister)
         ResponseFinalState(Response(fifoValueRegister))
