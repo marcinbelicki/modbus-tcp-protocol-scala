@@ -107,7 +107,7 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
 
   override type RES = Response
 
-  object InitialDecodeResponse extends ResponseDecodeState {
+  private object InitialDecodeResponse extends ResponseDecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
       if (byteBuffer.remaining() < 2) return Left("The byte buffer must contain at least 2 bytes.")
 
