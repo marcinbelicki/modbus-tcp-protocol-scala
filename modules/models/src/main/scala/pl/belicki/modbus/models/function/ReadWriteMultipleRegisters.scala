@@ -114,7 +114,7 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       val registersValueLength = java.lang.Byte.toUnsignedInt(byteBuffer.get)
 
       for {
-        _ <- validateRegistersValueLength(registersValueLength)
+        _ <- validateRegistersValueEvenLength(registersValueLength)
         _ <- Either.cond(
           byteBuffer.remaining() == registersValueLength,
           (),
@@ -128,20 +128,20 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
       }
     }
 
-    override def toRes: Either[String, Response] = ???
+    override def toRes: Either[String, Response] = Left("Can't convert initial state into Response")
+
   }
 
-  override def initialResponseDecodeState: ResponseDecodeState = ???
+  override def initialResponseDecodeState: ResponseDecodeState = InitialDecodeResponse
 
   override def validateResponse(response: Response): Either[String, Response] = {
     for {
-      _ <- validateRegistersValueLength(response.registersValue.length)
+      _ <- validateRegistersValueEvenLength(response.registersValue.length)
       _ <- RegistersValueLengthValidator.validate(response.registersValue.length)
-
     } yield response
   }
 
-  private def validateRegistersValueLength(length: Int) = {
+  private def validateRegistersValueEvenLength(length: Int) = {
     Either.cond(
       length % 2 == 0,
       (),
