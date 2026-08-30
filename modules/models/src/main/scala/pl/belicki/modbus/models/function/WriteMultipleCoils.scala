@@ -89,4 +89,15 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
     _ <- QuantityValidator.validate(request.quantity)
     _ <- AddressValidator.validate(request.address)
   } yield request
+
+  case class Response(
+      address: Int,
+      quantity: Int
+  ) extends super
+
+  override type RES = this.type
+
+  override def initialResponseDecodeState: WriteMultipleCoils.ResponseDecodeState = ???
+
+  override def validateResponse(response: WriteMultipleCoils): Either[String, WriteMultipleCoils.type] = ???
 }
