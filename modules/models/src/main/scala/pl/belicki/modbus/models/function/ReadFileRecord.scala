@@ -223,8 +223,8 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       } yield {
         byteBuffer.get(recordData)
 
-        if (byteBuffer.remaining() == 0) ResponseFinalState(Response((SubResponse(recordData) :: subResponses).reverse))
-        else ReadingSubResponses(SubResponse(recordData) :: subResponses)
+        if (byteBuffer.hasRemaining) ReadingSubResponses(SubResponse(recordData) :: subResponses)
+        else ResponseFinalState(Response((SubResponse(recordData) :: subResponses).reverse))
       }
     }
 

@@ -86,7 +86,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       byteBuffer.get(recordData)
 
       val newSubRequests = SubRequest(fileNumber, recordNumber, recordData) :: subRequests
-      if (byteBuffer.remaining() == 0) return Right(RequestFinalState(Request(newSubRequests.reverse)))
+      if (!byteBuffer.hasRemaining) return Right(RequestFinalState(Request(newSubRequests.reverse)))
 
       Right(ReadSubRequests(newSubRequests))
     }
@@ -208,8 +208,8 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       } yield {
         byteBuffer.get(recordData)
         val newSubResponses = SubResponse(fileNumber, recordNumber, recordData) :: subResponses
-        if (byteBuffer.remaining() == 0) ResponseFinalState(Response(newSubResponses.reverse))
-        else ResponseFinalState(Response(newSubResponses))
+        if (byteBuffer.hasRemaining) ResponseFinalState(Response(newSubResponses))
+        else ResponseFinalState(Response(newSubResponses.reverse))
       }
     }
 

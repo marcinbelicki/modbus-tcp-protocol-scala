@@ -66,13 +66,11 @@ abstract class ModbusFunction(_code: Int) {
   final def decodeRequest(byteBuffer: ByteBuffer): Either[ModbusError, REQ] = {
     @tailrec
     def helper(state: RequestDecodeState): Either[ModbusError, REQ] =
-      if (byteBuffer.remaining() <= 0) state.toReq
-      else {
-        state.decode(byteBuffer) match {
-          case Right(newState) => helper(newState)
-          case Left(error)     => Left(error)
-        }
+      if (byteBuffer.hasRemaining) state.decode(byteBuffer) match {
+        case Right(newState) => helper(newState)
+        case Left(error)     => Left(error)
       }
+      else state.toReq
 
     helper(initialRequestDecodeState)
   }
@@ -99,13 +97,11 @@ abstract class ModbusFunction(_code: Int) {
   final def decodeResponse(byteBuffer: ByteBuffer): Either[String, RES] = {
     @tailrec
     def helper(state: ResponseDecodeState): Either[String, RES] =
-      if (byteBuffer.remaining() <= 0) state.toRes
-      else {
-        state.decode(byteBuffer) match {
-          case Right(newState) => helper(newState)
-          case Left(error)     => Left(error)
-        }
+      if (byteBuffer.hasRemaining) state.decode(byteBuffer) match {
+        case Right(newState) => helper(newState)
+        case Left(error)     => Left(error)
       }
+      else state.toRes
 
     helper(initialResponseDecodeState)
   }

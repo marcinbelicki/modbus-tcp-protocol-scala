@@ -93,11 +93,39 @@ object WriteMultipleCoils extends ModbusFunction(0x0f) {
   case class Response(
       address: Int,
       quantity: Int
-  ) extends super
+  ) extends super.Response {
+    override val size: Int = Response.size
 
-  override type RES = this.type
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
+      for {
+        _ <- validateResponse(this)
+      } yield {
+        byteBuffer.putShort(address.toShort)
+        byteBuffer.putShort(quantity.toShort)
+      }
+  }
 
-  override def initialResponseDecodeState: WriteMultipleCoils.ResponseDecodeState = ???
+  object Response {
+    val size: Int = java.lang.Short.BYTES * 2
+  }
 
-  override def validateResponse(response: WriteMultipleCoils): Either[String, WriteMultipleCoils.type] = ???
+  private object InitialResponseDecodeState extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      if (byteBuffer.remaining() != Response.size) return Left(s"The remaining bytes: ${byteBuffer.remaining()} must be equal to ${Response.size}")
+      val address, quantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
+
+      Right(ResponseFinalState(Response(address, quantity)))
+    }
+
+    override def toRes: Either[String, Response] = Left("Can't convert initial state into Response")
+  }
+
+  override type RES = Response
+
+  override def initialResponseDecodeState: ResponseDecodeState = InitialResponseDecodeState
+
+  override def validateResponse(response: Response): Either[String, Response] = for {
+    _ <- AddressValidator.validate(response.address)
+    _ <- QuantityValidator.validate(response.quantity)
+  } yield response
 }
