@@ -29,7 +29,7 @@ object WriteSingleRegister extends ModbusFunction(0x06) {
 
   private object Initial extends RequestDecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[ModbusError, RequestDecodeState] = {
-      if (byteBuffer.remaining() < 4) return ExceptionCode.ILLEGAL_DATA_VALUE
+      if (byteBuffer.remaining() < Request.size) return ExceptionCode.ILLEGAL_DATA_VALUE
       val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
       val value   = byteBuffer.getShort
 
