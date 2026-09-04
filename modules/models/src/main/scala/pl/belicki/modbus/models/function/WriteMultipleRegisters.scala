@@ -73,4 +73,44 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
     _ <- QuantityValidator.validate(request.quantity)
     _ <- AddressValidator.validate(request.address)
   } yield request
+
+  case class Response(
+      address: Int,
+      quantity: Int
+  ) extends super.Response {
+    override def size: Int = Response.size
+
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+  }
+
+  object Response {
+    val size: Int = java.lang.Short.BYTES * 2
+  }
+
+  override type RES = Response
+
+  object InitialResponseDecodeState extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      if (byteBuffer.remaining() != Response.size)
+        return Left(s"The number remaining bytes: ${byteBuffer.remaining()} must be equal to ${Response.size}")
+
+      val address = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
+
+      for {
+        _ <- AddressValidator.validate(address)
+        quantity = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
+        _ <- QuantityValidator.validate(quantity)
+      } yield ResponseFinalState(Response(address, quantity))
+
+    }
+
+    override def toRes: Either[String, Response] = Left("Can't convert initial state into Response")
+  }
+
+  override def initialResponseDecodeState: ResponseDecodeState = InitialResponseDecodeState
+
+  override def validateResponse(response: Response): Either[String, Response] = for {
+    _ <- QuantityValidator.validate(response.quantity)
+    _ <- AddressValidator.validate(response.address)
+  } yield response
 }
