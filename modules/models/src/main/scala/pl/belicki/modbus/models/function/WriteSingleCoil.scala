@@ -1,12 +1,12 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
-import pl.belicki.modbus.models.function.WriteSingleCoil.Initial.valueMap
 import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 
 object WriteSingleCoil extends ModbusFunction(0x05) {
+  import pl.belicki.modbus.models.function.WriteSingleCoil.Initial.valueMap
 
   case class Request(
       address: Int,
