@@ -98,7 +98,7 @@ object MaskWriteRegister extends ModbusFunction(0x16) {
       )
     }
 
-    override def toRes: Either[String, RES] = Left("Can't convert initial state into Response")
+    override def toRes: Either[String, RES] = Left("'t convert initial state into Response")
   }
 
   override type RES = Response
