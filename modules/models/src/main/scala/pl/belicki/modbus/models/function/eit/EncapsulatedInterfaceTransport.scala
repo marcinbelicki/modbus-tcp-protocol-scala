@@ -31,6 +31,8 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       }
     }
 
+    abstract class Response extends EncapsulatedInterfaceTransport.Response
+
     def initialRequestDecodeState: RequestDecodeState
 
   }
@@ -80,6 +82,11 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     }
 
     override def initialRequestDecodeState: RequestDecodeState = Initial
+
+    case class Response(
+        readDeviceIdCode: ReadDeviceIdCode,
+        conformity
+                       )
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
@@ -125,4 +132,11 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
   override def initialRequestDecodeState: RequestDecodeState = Initial
 
   override def validateRequest(request: Request): Either[String, Request] = Right(request)
+
+
+  override type RES =
+
+  override def initialResponseDecodeState: EncapsulatedInterfaceTransport.ResponseDecodeState = ???
+
+  override def validateResponse(response: EncapsulatedInterfaceTransport): Either[String, EncapsulatedInterfaceTransport.type] = ???
 }
