@@ -85,7 +85,9 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
     case class Response(
         readDeviceIdCode: ReadDeviceIdCode,
-        conformity
+        conformityLevel: ConformityLevel,
+        individualAccess: Boolean,
+        nextObjectId: Option[ObjectId]
                        )
   }
 
