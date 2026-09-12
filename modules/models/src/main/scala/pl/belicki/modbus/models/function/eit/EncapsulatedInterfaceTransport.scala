@@ -98,7 +98,11 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         nextObjectId: Option[ObjectId],
         numberOfObjects: Int,
         objects: List[ObjectInfo]
-    ) extends EncapsulatedInterfaceTransport.Response
+    ) extends EncapsulatedInterfaceTransport.Response {
+      override def size: Int =
+
+      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+    }
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
