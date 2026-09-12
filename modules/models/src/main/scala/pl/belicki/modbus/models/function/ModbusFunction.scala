@@ -27,6 +27,7 @@ abstract class ModbusFunction(_code: Int) {
         byteBuffer <- encode(byteBuffer)
       } yield byteBuffer
   }
+
   abstract class Request extends Message
 
   object MessageSizeValidator extends RangeValidator(0x0000, 0x00fd, "size")

@@ -8,11 +8,12 @@ import java.nio.ByteBuffer
 
 object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
-  abstract class SubFunction(_code: Int) {
+  sealed abstract class SubFunction(_code: Int) {
 
     val code: Byte = _code.toByte
 
-    abstract class Request extends EncapsulatedInterfaceTransport.Request {
+    trait Message {
+      this: EncapsulatedInterfaceTransport.Message =>
       val subFunction: SubFunction = SubFunction.this
 
       protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer]
@@ -31,7 +32,9 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       }
     }
 
-    abstract class Response extends EncapsulatedInterfaceTransport.Response
+    abstract class Request extends EncapsulatedInterfaceTransport.Request with Message
+
+    abstract class Response extends EncapsulatedInterfaceTransport.Response with Message
 
     def initialRequestDecodeState: RequestDecodeState
 
@@ -141,5 +144,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
   override def initialRequestDecodeState: RequestDecodeState = Initial
 
   override def validateRequest(request: Request): Either[String, Request] = Right(request)
+
+  type RES = Response
 
 }
