@@ -89,7 +89,9 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     case class ObjectInfo(
         id: ObjectId,
         value: String
-    )
+    ) {
+      def size = java.lang.Byte.BYTES + value.length
+    }
 
     case class Response(
         readDeviceIdCode: ReadDeviceIdCode,
