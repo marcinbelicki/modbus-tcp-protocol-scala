@@ -5,6 +5,7 @@ import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction}
 import pl.belicki.modbus.models.util.EnumUtil
 
 import java.nio.ByteBuffer
+import java.nio.charset.Charset
 
 object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
@@ -37,6 +38,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     abstract class Response extends EncapsulatedInterfaceTransport.Response with Message
 
     def initialRequestDecodeState: RequestDecodeState
+    def initialResponseDecodeState: ResponseDecodeState
 
   }
 
@@ -90,7 +92,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         id: ObjectId,
         value: String
     ) {
-      def size = java.lang.Byte.BYTES + value.length
+      lazy val size: Int = java.lang.Byte.BYTES * 2 + value.length
     }
 
     case class Response(
@@ -101,10 +103,18 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         numberOfObjects: Int,
         objects: List[ObjectInfo]
     ) extends EncapsulatedInterfaceTransport.Response {
-      override def size: Int =
+    override lazy val size: Int = java.lang.Byte.BYTES * 6 + objects.map(_.size).sum
 
       override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
     }
+
+    private object InitialResponseDecodeState extends ResponseDecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] =
+
+      override def toRes: Either[String, Response] = ???
+    }
+
+    override def initialResponseDecodeState: ResponseDecodeState = ???
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
