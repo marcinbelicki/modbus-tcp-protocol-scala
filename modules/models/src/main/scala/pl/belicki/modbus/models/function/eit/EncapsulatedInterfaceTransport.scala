@@ -1,7 +1,7 @@
 package pl.belicki.modbus.models.function.eit
 
 import pl.belicki.modbus.models.ExceptionCode
-import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction}
+import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction, eit}
 import pl.belicki.modbus.models.util.EnumUtil
 
 import java.nio.ByteBuffer
@@ -77,7 +77,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         if (byteBuffer.remaining() != 2) return ExceptionCode.ILLEGAL_DATA_VALUE
 
         for {
-          readDeviceIdCode <- ReadDeviceIdCode.getOrElseIllegal(byteBuffer.get())
+          readDeviceIdCode <- ReadDeviceIdCodeUtil.getOrElseIllegal(byteBuffer.get())
           objectId = ObjectId(byteBuffer.get())
         } yield RequestFinalState(Request(readDeviceIdCode, objectId))
 
@@ -98,18 +98,67 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     case class Response(
         readDeviceIdCode: ReadDeviceIdCode,
         conformityLevel: ConformityLevel,
-        individualAccess: Boolean,
+        individualAccessAllowed: Boolean,
         nextObjectId: Option[ObjectId],
-        numberOfObjects: Int,
-        objects: List[ObjectInfo]
+        objects: Vector[ObjectInfo]
     ) extends EncapsulatedInterfaceTransport.Response {
-    override lazy val size: Int = java.lang.Byte.BYTES * 6 + objects.map(_.size).sum
+      override lazy val size: Int = java.lang.Byte.BYTES * 5 + objects.map(_.size).sum
 
       override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
     }
 
     private object InitialResponseDecodeState extends ResponseDecodeState {
-      override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] =
+      private val INDIVIDUAL_ACCESS_BIT = 0x80
+
+      private val booleanByByte = Map(
+        0xff.toByte -> true,
+        0x00.toByte -> false
+      )
+
+      override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+        if (byteBuffer.remaining() < 5) return Left("Too little remaining bytes for ReadDeviceIdentification response")
+        for {
+          readDeviceIdCode <- ReadDeviceIdCodeUtil.getOrElseErrorMessage(byteBuffer.get)
+          individualAccess        = readDeviceIdCode == ReadDeviceIdCode.Specific
+          conformityLevelByte     = byteBuffer.get
+          individualAccessAllowed = (conformityLevelByte & INDIVIDUAL_ACCESS_BIT) == INDIVIDUAL_ACCESS_BIT
+          conformityLevel <- ConformityLevelUtil.getOrElseErrorMessage((conformityLevelByte & 0x0f).toByte)
+          _               <- Either.cond(
+            !individualAccess || individualAccessAllowed,
+            (),
+            s"The individualAccessAllowed must be true if the readDeviceIdCode is ${ReadDeviceIdCode.Specific}"
+          )
+          moreFollows <- booleanByByte.get(byteBuffer.get).toRight("The moreFollows byte must be either 0x00 or 0xff")
+          _           <- Either.cond(!individualAccess || !moreFollows, (), s"If the individualAccess is true the the moreFollows flag must be false")
+          nextObjectIdByte = byteBuffer.get
+          _ <- Either.cond(nextObjectIdByte != 0x00 || !moreFollows, (), s"If the moreFollows flag is set to false the nextObjectIdByte must be 0x00")
+          nextObjectId    = Option.when(moreFollows)(ObjectId(nextObjectIdByte))
+          numberOfObjects = java.lang.Byte.toUnsignedInt(byteBuffer.get)
+          _ <- Either.cond(numberOfObjects != 1 || !individualAccess, (), s"If the individualAccess flag is true the number of objects must be 1")
+        } yield ReadingObjectsResponseDecodeState(
+          readDeviceIdCode = readDeviceIdCode,
+          conformityLevel = conformityLevel,
+          individualAccessAllowed = individualAccessAllowed,
+          nextObjectId = nextObjectId,
+          objectsLeft = numberOfObjects,
+          objects = Vector.empty
+        )
+      }
+
+      override def toRes: Either[String, Response] = Left("Cannot convert from initial state into response.")
+    }
+
+    private case class ReadingObjectsResponseDecodeState(
+        readDeviceIdCode: ReadDeviceIdCode,
+        conformityLevel: ConformityLevel,
+        individualAccessAllowed: Boolean,
+        nextObjectId: Option[ObjectId],
+        objectsLeft: Int,
+        objects: Vector[ObjectInfo]
+    ) extends ResponseDecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+       if (byteBuffer.remaining() < 2)  re
+      }
 
       override def toRes: Either[String, Response] = ???
     }
@@ -151,8 +200,14 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     override def toReq: Either[ModbusError, Request] = ExceptionCode.ILLEGAL_DATA_VALUE
   }
 
-  object ReadDeviceIdCode extends EnumUtil[ReadDeviceIdCode, Byte] {
+  object ReadDeviceIdCodeUtil extends EnumUtil[ReadDeviceIdCode, Byte] {
     override protected def getCode(e: ReadDeviceIdCode): Byte = e.getCode
+
+    override protected def viewCode(a: Byte): String = String.format("%02X", a)
+  }
+
+  object ConformityLevelUtil extends EnumUtil[ConformityLevel, Byte] {
+    override protected def getCode(e: ConformityLevel): Byte = e.getCode
 
     override protected def viewCode(a: Byte): String = String.format("%02X", a)
   }

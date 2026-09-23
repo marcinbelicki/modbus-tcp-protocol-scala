@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.util
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.function.eit.ConformityLevel
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -20,6 +21,9 @@ abstract class EnumUtil[E <: Enum[E]: ClassTag, A] {
   def getOrElseIllegal(code: A): Either[ExceptionCode, E] =
     valueByCode.get(code).toRight(ExceptionCode.ILLEGAL_DATA_VALUE)
 
+  def getOrElseErrorMessage(code: A): Either[String, E] =
+    valueByCode.get(code).toRight(s"The $code must correspond to the value defined by ${classTag[E].runtimeClass.getSimpleName}")
+
 }
 
 object EnumUtil {
@@ -29,5 +33,6 @@ object EnumUtil {
 
     override protected def viewCode(a: Byte): String = String.format("%02X", a)
   }
+
 
 }
