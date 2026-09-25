@@ -157,13 +157,38 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         objects: Vector[ObjectInfo]
     ) extends ResponseDecodeState {
       override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
-       if (byteBuffer.remaining() < 2)  re
+        if (byteBuffer.remaining() < 2)
+          return Left(s"The number of the remaining bytes (${byteBuffer.remaining()}) must be at least 2 to construct an object.")
+
+        val objectId     = ObjectId(byteBuffer.get)
+        val objectLength = java.lang.Byte.toUnsignedInt(byteBuffer.get)
+
+        if (byteBuffer.remaining() < objectLength)
+          return Left(s"The number of the remaining bytes (${byteBuffer.remaining()}) must be at least $objectLength")
+        val value = new Array[Byte](objectLength)
+        byteBuffer.get(value)
+        Right(
+          copy(
+            objectsLeft = objectsLeft - 1,
+            objects = objects.prepended(ObjectInfo(objectId, new String(value, Charset.forName("ASCII"))))
+          )
+        )
       }
 
-      override def toRes: Either[String, Response] = ???
+      override def toRes: Either[String, Response] = Either.cond(
+        objectsLeft != 0,
+        Response(
+          readDeviceIdCode,
+          conformityLevel,
+          individualAccessAllowed,
+          nextObjectId,
+          objects
+        ),
+        "The number of objects left must be equal to 0"
+      )
     }
 
-    override def initialResponseDecodeState: ResponseDecodeState = ???
+    override def initialResponseDecodeState: ResponseDecodeState = InitialResponseDecodeState
   }
 
   object CANopenGeneralReference extends SubFunction(0x0d) {
