@@ -3,6 +3,7 @@ package pl.belicki.modbus.models.function.eit
 import pl.belicki.modbus.models.ExceptionCode
 import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction, eit}
 import pl.belicki.modbus.models.util.EnumUtil
+import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
@@ -93,7 +94,16 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         value: String
     ) {
       lazy val size: Int = java.lang.Byte.BYTES * 2 + value.length
+
+      def encode(byteBuffer: ByteBuffer): ByteBuffer = {
+        byteBuffer.put()
+      }
     }
+
+    private val INDIVIDUAL_ACCESS_BIT = 0x80
+
+    private object ValueValidator extends RangeValidator(0x00, 0xff, "value", "02X")
+    private object NumberOfObjectsValidator extends RangeValidator(0x00, 0xff, "numberOfObjects", "02X")
 
     case class Response(
         readDeviceIdCode: ReadDeviceIdCode,
@@ -104,11 +114,32 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     ) extends EncapsulatedInterfaceTransport.Response {
       override lazy val size: Int = java.lang.Byte.BYTES * 5 + objects.map(_.size).sum
 
-      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = {
+        for {
+          _ <- validateResponse(this)
+        } yield {
+          byteBuffer.put(readDeviceIdCode.getCode)
+          val conformityLevelByte = if (individualAccessAllowed) (conformityLevel.getCode | INDIVIDUAL_ACCESS_BIT).toByte else conformityLevel.getCode
+          byteBuffer.put(conformityLevelByte)
+          val moreFollows = if (nextObjectId.isDefined) 0xff.toByte else 0x00.toByte
+          byteBuffer.put(moreFollows)
+          val nextObjectIdByte = nextObjectId.fold(0x00.toByte)(_.getCode)
+          byteBuffer.put(nextObjectIdByte)
+        }
+
+      }
     }
 
+    def validateResponse(response: Response) = for {
+      _ <- Either.cond(
+        response.readDeviceIdCode != ReadDeviceIdCode.Specific || response.objects.length == 1,
+        (),
+        s"The number of objects must be 1 if the readDeviceIdCode is ${ReadDeviceIdCode.Specific}"
+      )
+      _ <- NumberOfObjectsValidator.validate(response.objects.length)
+    } yield response
+
     private object InitialResponseDecodeState extends ResponseDecodeState {
-      private val INDIVIDUAL_ACCESS_BIT = 0x80
 
       private val booleanByByte = Map(
         0xff.toByte -> true,
