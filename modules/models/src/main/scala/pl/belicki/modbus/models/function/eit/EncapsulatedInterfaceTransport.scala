@@ -7,6 +7,7 @@ import pl.belicki.modbus.models.validator.RangeValidator
 
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import scala.annotation.tailrec
 
 object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
@@ -95,14 +96,16 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     ) {
       lazy val size: Int = java.lang.Byte.BYTES * 2 + value.length
 
-      def encode(byteBuffer: ByteBuffer): ByteBuffer = {
+      def encode(byteBuffer: ByteBuffer): ByteBuffer =
         byteBuffer.put()
-      }
     }
+    def validateObjectInfo(objectInfo: ObjectInfo) = for {
+      _ <- ValueLengthValidator.validate(objectInfo.value.length)
+    } yield objectInfo
 
     private val INDIVIDUAL_ACCESS_BIT = 0x80
 
-    private object ValueValidator extends RangeValidator(0x00, 0xff, "value", "02X")
+    private object ValueLengthValidator extends RangeValidator(0x00, 0xff, "length of the value", "02X")
     private object NumberOfObjectsValidator extends RangeValidator(0x00, 0xff, "numberOfObjects", "02X")
 
     case class Response(
@@ -130,14 +133,29 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       }
     }
 
-    def validateResponse(response: Response) = for {
-      _ <- Either.cond(
-        response.readDeviceIdCode != ReadDeviceIdCode.Specific || response.objects.length == 1,
-        (),
-        s"The number of objects must be 1 if the readDeviceIdCode is ${ReadDeviceIdCode.Specific}"
-      )
-      _ <- NumberOfObjectsValidator.validate(response.objects.length)
-    } yield response
+    def validateResponse(response: Response) = {
+
+      @tailrec
+      def helper(objects: Vector[ObjectInfo], errors: List[String]): Either[String, Response] =
+        objects match {
+          case head +: tail => validateObjectInfo(head) match {
+              case Right(_)    => helper(tail, errors)
+              case Left(error) => helper(tail, error :: errors)
+            }
+          case _ =>
+            if (errors.isEmpty) Right(response) else Left(errors.reverse.mkString(System.lineSeparator()))
+        }
+
+      for {
+        _ <- Either.cond(
+          response.readDeviceIdCode != ReadDeviceIdCode.Specific || response.objects.length == 1,
+          (),
+          s"The number of objects must be 1 if the readDeviceIdCode is ${ReadDeviceIdCode.Specific}"
+        )
+        _ <- NumberOfObjectsValidator.validate(response.objects.length)
+        _ <- helper(response.objects, Nil)
+      } yield response
+    }
 
     private object InitialResponseDecodeState extends ResponseDecodeState {
 
