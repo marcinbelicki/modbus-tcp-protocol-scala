@@ -1,7 +1,7 @@
 package pl.belicki.modbus.models.function.eit
 
 import pl.belicki.modbus.models.ExceptionCode
-import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction, eit}
+import pl.belicki.modbus.models.function.{ModbusError, ModbusFunction}
 import pl.belicki.modbus.models.util.EnumUtil
 import pl.belicki.modbus.models.validator.RangeValidator
 
@@ -37,7 +37,9 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
     abstract class Request extends EncapsulatedInterfaceTransport.Request with Message
 
-    abstract class Response extends EncapsulatedInterfaceTransport.Response with Message
+    abstract class Response extends EncapsulatedInterfaceTransport.Response with Message {
+      def validate: Either[String, Response]
+    }
 
     def initialRequestDecodeState: RequestDecodeState
     def initialResponseDecodeState: ResponseDecodeState
@@ -96,10 +98,13 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     ) {
       lazy val size: Int = java.lang.Byte.BYTES * 2 + value.length
 
-      def encode(byteBuffer: ByteBuffer): ByteBuffer =
-        byteBuffer.put()
+      def encode(byteBuffer: ByteBuffer): ByteBuffer = {
+        byteBuffer.put(id.getCode)
+        byteBuffer.put(value.length.toByte)
+        byteBuffer.put(value.getBytes(Charset.forName("ASCII")))
+      }
     }
-    def validateObjectInfo(objectInfo: ObjectInfo) = for {
+    private def validateObjectInfo(objectInfo: ObjectInfo) = for {
       _ <- ValueLengthValidator.validate(objectInfo.value.length)
     } yield objectInfo
 
@@ -114,12 +119,12 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
         individualAccessAllowed: Boolean,
         nextObjectId: Option[ObjectId],
         objects: Vector[ObjectInfo]
-    ) extends EncapsulatedInterfaceTransport.Response {
-      override lazy val size: Int = java.lang.Byte.BYTES * 5 + objects.map(_.size).sum
+    ) extends super.Response {
+      override def validate: Either[String, Response] = validateResponse(this)
 
-      override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = {
+      override protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer] =
         for {
-          _ <- validateResponse(this)
+          _ <- validate
         } yield {
           byteBuffer.put(readDeviceIdCode.getCode)
           val conformityLevelByte = if (individualAccessAllowed) (conformityLevel.getCode | INDIVIDUAL_ACCESS_BIT).toByte else conformityLevel.getCode
@@ -128,12 +133,15 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
           byteBuffer.put(moreFollows)
           val nextObjectIdByte = nextObjectId.fold(0x00.toByte)(_.getCode)
           byteBuffer.put(nextObjectIdByte)
+
+          objects.foreach(_.encode(byteBuffer))
+          byteBuffer
         }
 
-      }
+      override protected lazy val baseSize: Int = java.lang.Byte.BYTES * 5 + objects.map(_.size).sum
     }
 
-    def validateResponse(response: Response) = {
+    def validateResponse(response: Response): Either[String, Response] = {
 
       @tailrec
       def helper(objects: Vector[ObjectInfo], errors: List[String]): Either[String, Response] =
@@ -255,6 +263,23 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     }
 
     override def initialRequestDecodeState: RequestDecodeState = Initial
+
+    case class Response() extends super.Response {
+      override protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = Right(byteBuffer)
+
+      override protected lazy val baseSize: Int = 0
+
+      override def validate: Either[String, Response] = Right(this)
+    }
+
+    private object InitialResponseDecodeState extends ResponseDecodeState {
+      override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] =
+        Left(s"The decoding of $CANopenGeneralReference is not supported")
+
+      override def toRes: Either[String, Response] = Right(Response())
+    }
+
+    override def initialResponseDecodeState: ResponseDecodeState = InitialResponseDecodeState
   }
 
   type REQ = Request
@@ -290,6 +315,24 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
 
   override def validateRequest(request: Request): Either[String, Request] = Right(request)
 
-  type RES = Response
+  type RES = SubFunction#Response
 
+  private object InitialResponseDecodeState extends ResponseDecodeState {
+    override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
+      if (byteBuffer.remaining() < 1) return Left("Too little bytes to decode Response.")
+
+      val code = byteBuffer.get()
+
+      SubFunction.subFunctionByCode.get(code) match {
+        case Some(subFunction) => Right(subFunction.initialResponseDecodeState)
+        case None              => Left(f"SubFunction code: 0x$code%02X is not supported")
+      }
+    }
+
+    override def toRes: Either[String, RES] = Left(s"Can't convert $this into Response")
+  }
+
+  override def initialResponseDecodeState: ResponseDecodeState = InitialResponseDecodeState
+
+  override def validateResponse(response: RES): Either[String, RES] = response.validate
 }
