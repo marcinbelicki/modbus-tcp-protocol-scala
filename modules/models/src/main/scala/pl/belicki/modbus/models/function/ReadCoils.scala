@@ -32,6 +32,11 @@ object ReadCoils extends ModbusFunction(0x01) with ReadBits {
       byteBuffer.put(coilStatus.length.toByte)
       byteBuffer.put(coilStatus)
     }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case response: Response => coilStatus sameElements response.coilStatus
+      case _                  => false
+    }
   }
 
   type RES = Response

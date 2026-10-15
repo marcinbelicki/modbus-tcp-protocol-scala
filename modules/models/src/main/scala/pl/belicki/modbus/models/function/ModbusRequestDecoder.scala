@@ -17,9 +17,8 @@ class ModbusRequestDecoder(
         throw new IllegalStateException(f"Too many functions: $functions for code: $byte%02X")
     }
 
-
-  final def decodeHexRequest(hex: String): Either[ModbusError, ModbusFunction#Request]     = decode(SpacedHex.parseHex(hex))
-  final def decode(bytes: Array[Byte]): Either[ModbusError, ModbusFunction#Request] = decode(ByteBuffer.wrap(bytes))
+  final def decodeHexRequest(hex: String): Either[ModbusError, ModbusFunction#Request] = decode(SpacedHex.parseHex(hex))
+  final def decode(bytes: Array[Byte]): Either[ModbusError, ModbusFunction#Request]    = decode(ByteBuffer.wrap(bytes))
 
   def decode(byteBuffer: ByteBuffer): Either[ModbusError, ModbusFunction#Request] = {
     val functionCode = byteBuffer.get()

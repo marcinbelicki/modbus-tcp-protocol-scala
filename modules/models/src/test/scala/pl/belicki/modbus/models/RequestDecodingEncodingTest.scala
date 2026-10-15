@@ -11,7 +11,7 @@ import pl.belicki.modbus.models.function.{
 }
 import pl.belicki.modbus.models.util.SpacedHex
 
-class DecodingEncodingTest extends AnyWordSpecLike {
+class RequestDecodingEncodingTest extends AnyWordSpecLike {
 
   private val hexWithRequests =
     Table(
