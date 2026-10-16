@@ -32,6 +32,11 @@ object ReadDiscreteInputs extends ModbusFunction(0x02) with ReadBits {
       byteBuffer.put(inputsStatus.length.toByte)
       byteBuffer.put(inputsStatus)
     }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case response: Response => inputsStatus sameElements response.inputsStatus
+      case _                  => false
+    }
   }
 
   type RES = Response
