@@ -12,9 +12,10 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
 
   private val hexWithRequests =
     Table(
-      ("hex",            "expectedRequest"),
-      ("01 03 CD 6B 05", ReadCoils.Response(SpacedHex.parseHex("CD 6B 05"))),
-      ("02 03 AC DB 35", ReadDiscreteInputs.Response(SpacedHex.parseHex("AC DB 35")))
+      ("hex",                     "expectedRequest"),
+      ("01 03 CD 6B 05",          ReadCoils.Response(SpacedHex.parseHex("CD 6B 05"))),
+      ("02 03 AC DB 35",          ReadDiscreteInputs.Response(SpacedHex.parseHex("AC DB 35"))),
+      ("03 06 02 2B 00 00 00 64", ReadHoldingRegisters.Response(SpacedHex.parseHex("02 2B 00 00 00 64")))
     )
 
   private val decoder = ModbusResponseDecoder.ALL_FUNCTIONS

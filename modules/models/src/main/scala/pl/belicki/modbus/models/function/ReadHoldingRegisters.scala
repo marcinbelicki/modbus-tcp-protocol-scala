@@ -1,6 +1,5 @@
 package pl.belicki.modbus.models.function
 
-
 import java.nio.ByteBuffer
 
 object ReadHoldingRegisters extends ModbusFunction(0x03) with ReadRegisters {
@@ -32,6 +31,11 @@ object ReadHoldingRegisters extends ModbusFunction(0x03) with ReadRegisters {
     } yield {
       byteBuffer.put(registers.length.toByte)
       byteBuffer.put(registers)
+    }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case response: Response => registers sameElements response.registers
+      case _                  => false
     }
   }
 
