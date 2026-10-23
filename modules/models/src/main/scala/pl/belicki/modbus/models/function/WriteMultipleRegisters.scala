@@ -80,7 +80,12 @@ object WriteMultipleRegisters extends ModbusFunction(0x10) {
   ) extends super.Response {
     override def size: Int = Response.size
 
-    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = ???
+    override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {
+      _ <- validateResponse(this)
+    } yield {
+      byteBuffer.putShort(address.toShort)
+      byteBuffer.putShort(quantity.toShort)
+    }
   }
 
   object Response {

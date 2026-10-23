@@ -32,6 +32,11 @@ object ReadInputRegisters extends ModbusFunction(0x04) with ReadRegisters {
       byteBuffer.put(registers.length.toByte)
       byteBuffer.put(registers)
     }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case response: Response => registers sameElements response.registers
+      case _                  => false
+    }
   }
 
   override type RES = Response

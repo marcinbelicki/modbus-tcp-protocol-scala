@@ -130,6 +130,11 @@ object ReadFileRecord extends ModbusFunction(0x14) {
       byteBuffer.put(recordData)
     }
 
+    override def equals(obj: Any): Boolean = obj match {
+      case subResponse: SubResponse => subResponse.recordData sameElements recordData
+      case _                        => false
+    }
+
   }
 
   case class Response(
@@ -138,7 +143,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
     val respDataLength: Int = subResponses.map(_.size).sum
 
-    override lazy val size: Int = respDataLength + java.lang.Byte.SIZE
+    override lazy val size: Int = respDataLength + java.lang.Byte.BYTES
 
     override def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer] = for {
       _ <- validateResponse(this)
@@ -151,7 +156,7 @@ object ReadFileRecord extends ModbusFunction(0x14) {
 
   override type RES = Response
 
-  object FileRespLengthRangeValidator extends RangeValidator(0x07, 0xf5, "fileRespLength", "02X")
+  object FileRespLengthRangeValidator extends RangeValidator(0x03, 0xf5, "fileRespLength", "02X")
   object RespDataLengthRangeValidator extends RangeValidator(0x07, 0xf5, "respDataLength", "02X")
 
   def validateSubResponse(subResponse: SubResponse): Either[String, SubResponse] =
