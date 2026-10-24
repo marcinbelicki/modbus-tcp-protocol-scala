@@ -142,8 +142,8 @@ object WriteFileRecord extends ModbusFunction(0x15) {
     }
 
     override def equals(obj: Any): Boolean = obj match {
-      case that: SubRequest => fileNumber == that.fileNumber && recordNumber == that.recordNumber && recordData.sameElements(that.recordData)
-      case _                => false
+      case that: SubResponse => fileNumber == that.fileNumber && recordNumber == that.recordNumber && recordData.sameElements(that.recordData)
+      case _                 => false
     }
   }
 
@@ -173,7 +173,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
       for {
         _ <- RequestDataLengthValidator.validate(requestDataLength)
         _ <- Either.cond(
-          requestDataLength != byteBuffer.remaining(),
+          requestDataLength == byteBuffer.remaining(),
           (),
           s"The number of remaining bytes: ${byteBuffer.remaining()} must be equal to requestDataLength: $requestDataLength"
         )
@@ -200,7 +200,7 @@ object WriteFileRecord extends ModbusFunction(0x15) {
         recordLength = java.lang.Short.toUnsignedInt(byteBuffer.getShort)
         byteCount    = recordLength * 2
         _ <- Either.cond(
-          byteBuffer.remaining() < byteCount,
+          byteBuffer.remaining() == byteCount,
           (),
           s"The number of remaining bytes: ${byteBuffer.remaining()} must be equal to expected byteCount: $byteCount"
         )

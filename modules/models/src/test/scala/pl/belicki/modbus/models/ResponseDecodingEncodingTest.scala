@@ -33,6 +33,22 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
             )
           )
         )
+      ),
+      (
+        "15 0D 06 00 04 00 07 00 03 06 AF 04 BE 10 0D",
+        WriteFileRecord.Response(
+          List(
+            WriteFileRecord.SubResponse(4, 7, SpacedHex.parseHex("06 AF 04 BE 10 0D"))
+          )
+        )
+      ),
+      (
+        "16 00 04 00 F2 00 25",
+        MaskWriteRegister.Response(
+          0x04,
+          0x00f2.toShort,
+          0x0025.toShort
+        )
       )
     )
 
