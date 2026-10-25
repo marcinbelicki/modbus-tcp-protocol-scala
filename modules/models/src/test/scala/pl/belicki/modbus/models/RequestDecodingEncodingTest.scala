@@ -9,7 +9,7 @@ import pl.belicki.modbus.models.function.{
   MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs, ReadFIFOQueue, ReadFileRecord, ReadHoldingRegisters, ReadInputRegisters,
   ReadWriteMultipleRegisters, WriteFileRecord, WriteMultipleCoils, WriteMultipleRegisters, WriteSingleCoil, WriteSingleRegister
 }
-import pl.belicki.modbus.models.util.SpacedHex
+import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray}
 
 class RequestDecodingEncodingTest extends AnyWordSpecLike {
 
@@ -22,18 +22,18 @@ class RequestDecodingEncodingTest extends AnyWordSpecLike {
       ("04 00 08 00 01",                ReadInputRegisters.Request(8, 1)),
       ("05 00 AC FF 00",                WriteSingleCoil.Request(172, value = true)),
       ("06 00 01 00 03",                WriteSingleRegister.Request(1, 3)),
-      ("0F 00 13 00 0A 02 CD 01",       WriteMultipleCoils.Request(19, 10, SpacedHex("CD 01"))),
-      ("10 00 01 00 02 04 00 0A 01 02", WriteMultipleRegisters.Request(1, SpacedHex("00 0A 01 02"))),
+      ("0F 00 13 00 0A 02 CD 01",       WriteMultipleCoils.Request(19, 10, "CD 01")),
+      ("10 00 01 00 02 04 00 0A 01 02", WriteMultipleRegisters.Request(1, "00 0A 01 02")),
       (
         "14 0E 06 00 04 00 01 00 02 06 00 03 00 09 00 02",
         ReadFileRecord.Request(List(ReadFileRecord.SubRequest(4, 1, 2), ReadFileRecord.SubRequest(3, 9, 2)))
       ),
       (
         "15 0D 06 00 04 00 07 00 03 06 AF 04 BE 10 0D",
-        WriteFileRecord.Request(List(WriteFileRecord.SubRequest(4, 7, SpacedHex("06 AF 04 BE 10 0D"))))
+        WriteFileRecord.Request(List(WriteFileRecord.SubRequest(4, 7, "06 AF 04 BE 10 0D")))
       ),
       ("16 00 04 00 F2 00 25",                            MaskWriteRegister.Request(4, 0xf2, 0x25)),
-      ("17 00 03 00 06 00 0E 00 03 06 00 FF 00 FF 00 FF", ReadWriteMultipleRegisters.Request(3, 6, 14, SpacedHex("00 FF 00 FF 00 FF"))),
+      ("17 00 03 00 06 00 0E 00 03 06 00 FF 00 FF 00 FF", ReadWriteMultipleRegisters.Request(3, 6, 14, "00 FF 00 FF 00 FF")),
       ("18 04 DE",                                        ReadFIFOQueue.Request(1246)),
       ("2B 0E 01 00", EncapsulatedInterfaceTransport.ReadDeviceIdentification.Request(ReadDeviceIdCode.Basic, DefinedObjectId.VendorName)),
       ("2B 0E 01 02", EncapsulatedInterfaceTransport.ReadDeviceIdentification.Request(ReadDeviceIdCode.Basic, DefinedObjectId.MajorMinorRevision)),
@@ -57,7 +57,7 @@ class RequestDecodingEncodingTest extends AnyWordSpecLike {
           // when
           val Right(byteBuffer) = decodedRequest.toByteBuffer: @unchecked
           // then
-          SpacedHex(hex) shouldBe byteBuffer.array()
+          hex.spacedHex shouldBe byteBuffer.array()
 
           println(
             s"${Console.GREEN}Properly decoded/encoded ${expectedRequest.function.getClass.getSimpleName} request from hex: $hex to $expectedRequest ${Console.RESET}"

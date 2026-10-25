@@ -1,7 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.function.eit.EncapsulatedInterfaceTransport
-import pl.belicki.modbus.models.util.SpacedHex
+import pl.belicki.modbus.models.util.SpacedHex.SpacedHex
 
 import java.nio.ByteBuffer
 
@@ -15,7 +15,7 @@ class ModbusResponseDecoder(
         throw new IllegalStateException(f"Too many functions: $functions for code: 0x$byte%02X")
     }
 
-  final def decodeHexResponse(hex: String): Either[String, ModbusFunction#Response] = decode(SpacedHex.parseHex(hex))
+  final def decodeHexResponse(hex: String): Either[String, ModbusFunction#Response] = decode(hex.spacedHex)
   final def decode(bytes: Array[Byte]): Either[String, ModbusFunction#Response]     = decode(ByteBuffer.wrap(bytes))
 
   def decode(byteBuffer: ByteBuffer): Either[String, ModbusFunction#Response] = {

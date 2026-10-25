@@ -103,6 +103,11 @@ object ReadWriteMultipleRegisters extends ModbusFunction(0x17) {
         byteBuffer.put(registersValue.length.toByte)
         byteBuffer.put(registersValue)
       }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case that: Response => registersValue sameElements that.registersValue
+      case _ => false
+    }
   }
 
   override type RES = Response
