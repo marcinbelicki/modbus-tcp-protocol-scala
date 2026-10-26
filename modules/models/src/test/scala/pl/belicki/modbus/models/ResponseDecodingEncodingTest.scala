@@ -5,7 +5,11 @@ import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
 import pl.belicki.modbus.models.function._
-import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray}
+import pl.belicki.modbus.models.function.eit.EncapsulatedInterfaceTransport.ReadDeviceIdentification.ObjectInfo
+import pl.belicki.modbus.models.function.eit.{ConformityLevel, DefinedObjectId, EncapsulatedInterfaceTransport, ReadDeviceIdCode}
+import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray, stringFromArray}
+
+import java.nio.charset.Charset
 
 class ResponseDecodingEncodingTest extends AnyWordSpecLike {
 
@@ -58,11 +62,31 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
       (
         "18 00 06 00 02 01 B8 12 84",
         ReadFIFOQueue.Response("01 B8 12 84")
+      ),
+      (
+        "2B 0E 01 01 00 00 03 00 16 "
+          + "43 6F 6D 70 61 6E 79 20 69 64 65 6E 74 69 66 69 63 61 74 69 6F 6E "
+          + "01 0F "
+          + "50 72 6F 64 75 63 74 20 63 6F 64 65 20 58 58 "
+          + "02 05 "
+          + "56 32 2E 31 31",
+        EncapsulatedInterfaceTransport.ReadDeviceIdentification.Response(
+          ReadDeviceIdCode.Basic,
+          ConformityLevel.BasicIdentification,
+          individualAccessAllowed = false,
+          None,
+          Vector(
+            ObjectInfo(DefinedObjectId.VendorName, "Company identification"),
+            ObjectInfo(DefinedObjectId.ProductCode, "Product code XX"),
+            ObjectInfo(DefinedObjectId.MajorMinorRevision, "V2.11"),
+          )
+        )
       )
     )
 
   private val decoder = ModbusResponseDecoder.ALL_FUNCTIONS
 
+  println(stringFromArray("V2.11".getBytes(Charset.forName("ASCII"))))
   "ModbusResponseDecoder" must {
     "properly decode given hex" in {
 
