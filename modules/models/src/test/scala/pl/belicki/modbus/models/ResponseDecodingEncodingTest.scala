@@ -81,7 +81,8 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
             ObjectInfo(DefinedObjectId.MajorMinorRevision, "V2.11"),
           )
         )
-      )
+      ),
+      ("2B 0D",       EncapsulatedInterfaceTransport.CANopenGeneralReference.Response())
     )
 
   private val decoder = ModbusResponseDecoder.ALL_FUNCTIONS
