@@ -86,7 +86,6 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
 
   private val decoder = ModbusResponseDecoder.ALL_FUNCTIONS
 
-  println(stringFromArray("V2.11".getBytes(Charset.forName("ASCII"))))
   "ModbusResponseDecoder" must {
     "properly decode given hex" in {
 

@@ -143,15 +143,6 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
       override protected lazy val baseSize: Int = java.lang.Byte.BYTES * 5 + objects.map(_.size).sum
     }
 
-    Array(
-      43, 14, 1, 1, 0, 0, 3, 0, 22, 67, 111, 109, 112, 97, 110, 121, 32, 105, 100, 101, 110, 116, 105, 102, 105, 99, 97, 116, 105, 111, 110, 1, 15,
-      80, 114, 111, 100, 117, 99, 116, 32, 99, 111, 100, 101, 32, 88, 88, 2, 5, 86, 50, 46, 49, 49
-    )
-    Array(
-      43, 14, 1, 1, 0, 0, 2, 5, 86, 50, 46, 49, 49, 1, 15, 80, 114, 111, 100, 117, 99, 116, 32, 99, 111, 100, 101, 32, 88, 88, 0, 22, 67, 111, 109,
-      112, 97, 110, 121, 32, 105, 100, 101, 110, 116, 105, 102, 105, 99, 97, 116, 105, 111, 110, 0
-    )
-
     def validateResponse(response: Response): Either[String, Response] = {
 
       @tailrec
