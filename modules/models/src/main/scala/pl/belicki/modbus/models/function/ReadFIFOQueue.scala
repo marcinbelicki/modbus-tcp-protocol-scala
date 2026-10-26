@@ -51,6 +51,12 @@ object ReadFIFOQueue extends ModbusFunction(0x18) {
       byteBuffer.putShort(byteCount.toShort)
       val fifoCount = fifoValueRegister.length / 2
       byteBuffer.putShort(fifoCount.toShort)
+      byteBuffer.put(fifoValueRegister)
+    }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case response: Response => fifoValueRegister sameElements response.fifoValueRegister
+      case _                  => false
     }
   }
 

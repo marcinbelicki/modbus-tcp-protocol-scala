@@ -54,6 +54,10 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
         ReadWriteMultipleRegisters.Response(
           "00 FE 0A CD 00 01 00 03 00 0D 00 FF"
         )
+      ),
+      (
+        "18 00 06 00 02 01 B8 12 84",
+        ReadFIFOQueue.Response("01 B8 12 84")
       )
     )
 
