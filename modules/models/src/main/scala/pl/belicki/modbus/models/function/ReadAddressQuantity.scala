@@ -55,9 +55,9 @@ trait ReadAddressQuantity {
   private object InitialResponseState extends ResponseDecodeState {
     override def decode(byteBuffer: ByteBuffer): Either[String, ResponseDecodeState] = {
       for {
-        _ <- Either.cond(byteBuffer.hasRemaining, (), "Not enough bytes.")
+        _ <- Either.cond(byteBuffer.hasRemaining, (), s"The byte buffer must have the bytes remaining. | position: ${byteBuffer.position()}")
         byteCount = java.lang.Byte.toUnsignedInt(byteBuffer.get)
-        _ <- Either.cond(byteBuffer.remaining() == byteCount, (), "Not enough bytes to read coil status.")
+        _ <- Either.cond(byteBuffer.remaining() == byteCount, (), s"The number of the remaining bytes (${byteBuffer.remaining()}) must be equal to the expected byte count ($byteCount). | position: ${byteBuffer.position()}")
         _ <- validateByteCount(byteCount)
         bytes = new Array[Byte](byteCount)
       } yield {
