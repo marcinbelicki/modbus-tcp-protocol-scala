@@ -7,9 +7,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import pl.belicki.modbus.models.function._
 import pl.belicki.modbus.models.function.eit.EncapsulatedInterfaceTransport.ReadDeviceIdentification.ObjectInfo
 import pl.belicki.modbus.models.function.eit.{ConformityLevel, DefinedObjectId, EncapsulatedInterfaceTransport, ReadDeviceIdCode}
-import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray, stringFromArray}
-
-import java.nio.charset.Charset
+import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray}
 
 class ResponseDecodingEncodingTest extends AnyWordSpecLike {
 
