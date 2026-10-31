@@ -4,12 +4,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
-import pl.belicki.modbus.models.function.eit.EncapsulatedInterfaceTransport.ReadDeviceIdentification.ObjectInfo
-import pl.belicki.modbus.models.function.eit.{ConformityLevel, DefinedObjectId, EncapsulatedInterfaceTransport, ReadDeviceIdCode}
-import pl.belicki.modbus.models.function.{
-  MaskWriteRegister, ModbusResponseDecoder, ReadCoils, ReadDiscreteInputs, ReadFIFOQueue, ReadFileRecord, ReadHoldingRegisters, ReadInputRegisters,
-  ReadWriteMultipleRegisters, WriteFileRecord, WriteMultipleCoils, WriteMultipleRegisters, WriteSingleCoil, WriteSingleRegister
-}
+import pl.belicki.modbus.models.function.ModbusResponseDecoder
 
 class ResponseDecodingErrorTest extends AnyWordSpecLike {
 
