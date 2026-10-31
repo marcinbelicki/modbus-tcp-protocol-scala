@@ -9,14 +9,22 @@ lazy val root = project
     name := "modbus-tcp-protocol-scala",
     libraryDependencies ++= Nil
   ).aggregate(
-    models
+    models,
+    communication
   )
 
 lazy val models = project
-  .in(file("modules/models"))
+  .in(file("modules/modbus-tcp-protocol-models"))
   .settings(
-    name := "models",
+    name := "modbus-tcp-protocol-models",
     libraryDependencies ++= List(
       "org.scalatest" %% "scalatest" % "3.2.20" % Test
     )
+  )
+
+lazy val communication = project
+  .in(file("modules/modbus-tcp-protocol-communication"))
+  .dependsOn(models % "test->test;compile->compile")
+  .settings(
+    name := "modbus-tcp-protocol-communication"
   )
