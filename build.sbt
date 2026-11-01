@@ -3,6 +3,8 @@ ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "pl.belicki"
 ThisBuild / organizationName := "belicki"
 
+val PekkoVersion = "1.7.1"
+
 lazy val root = project
   .in(file("."))
   .settings(
@@ -26,5 +28,9 @@ lazy val communication = project
   .in(file("modules/modbus-tcp-protocol-communication"))
   .dependsOn(models % "test->test;compile->compile")
   .settings(
-    name := "modbus-tcp-protocol-communication"
+    name := "modbus-tcp-protocol-communication",
+    libraryDependencies ++= List(
+      "org.apache.pekko" %% "pekko-actor"   % PekkoVersion,
+      "org.apache.pekko" %% "pekko-testkit" % PekkoVersion % Test
+    )
   )
