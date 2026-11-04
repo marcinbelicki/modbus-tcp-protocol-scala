@@ -3,7 +3,9 @@ ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "pl.belicki"
 ThisBuild / organizationName := "belicki"
 
-val PekkoVersion = "1.7.1"
+val PekkoVersion     = "1.7.1"
+val ScalatestVersion = "3.2.20"
+val BytesVersion     = "1.6.1"
 
 lazy val root = project
   .in(file("."))
@@ -20,7 +22,7 @@ lazy val models = project
   .settings(
     name := "modbus-tcp-protocol-models",
     libraryDependencies ++= List(
-      "org.scalatest" %% "scalatest" % "3.2.20" % Test
+      "org.scalatest" %% "scalatest" % ScalatestVersion % Test
     )
   )
 
@@ -31,6 +33,7 @@ lazy val communication = project
     name := "modbus-tcp-protocol-communication",
     libraryDependencies ++= List(
       "org.apache.pekko" %% "pekko-actor"   % PekkoVersion,
-      "org.apache.pekko" %% "pekko-testkit" % PekkoVersion % Test
+      "org.apache.pekko" %% "pekko-testkit" % PekkoVersion % Test,
+      "at.favre.lib"      % "bytes"         % BytesVersion
     )
   )

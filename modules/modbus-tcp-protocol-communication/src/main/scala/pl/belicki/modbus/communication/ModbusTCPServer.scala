@@ -1,6 +1,6 @@
 package pl.belicki.modbus.communication
 
-import org.apache.pekko.actor.{Actor, ActorLogging, Props}
+import org.apache.pekko.actor.{Actor, ActorLogging, DiagnosticActorLogging, Props}
 import org.apache.pekko.io.{IO, Tcp}
 import org.apache.pekko.io.Tcp._
 
@@ -21,6 +21,5 @@ class ModbusTCPServer extends Actor with ActorLogging {
       log.info(s"Connected to: ${connected.remoteAddress}")
       val connection = sender()
       connection ! Register(handler)
-
   }
 }

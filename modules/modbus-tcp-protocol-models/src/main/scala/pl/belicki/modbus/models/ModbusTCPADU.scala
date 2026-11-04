@@ -4,6 +4,5 @@ import pl.belicki.modbus.models.function.ModbusFunction
 
 case class ModbusTCPADU(
     header: MBAPHeader,
-    functionCode: ModbusFunction,
-    data: Nothing
+    message: ModbusFunction#Message
 )
