@@ -23,7 +23,7 @@ class ModbusTCPServer(inetSocketAddress: InetSocketAddress) extends Actor with A
       context.stop(self)
 
     case connected: Connected =>
-      val handler = context.actorOf(Props[EchoHandler]())
+      val handler = context.actorOf(Props(new EchoHandler(connected.remoteAddress)))
       log.info(s"Connected to: ${connected.remoteAddress}")
       val connection = sender()
       connection ! Register(handler)
