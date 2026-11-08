@@ -4,9 +4,10 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
+import pl.belicki.modbus.models.function.decoder.ModbusRequestDecoder
 import pl.belicki.modbus.models.function.eit.{DefinedObjectId, EncapsulatedInterfaceTransport, ReadDeviceIdCode}
 import pl.belicki.modbus.models.function.{
-  MaskWriteRegister, ModbusRequestDecoder, ReadCoils, ReadDiscreteInputs, ReadFIFOQueue, ReadFileRecord, ReadHoldingRegisters, ReadInputRegisters,
+  MaskWriteRegister, ReadCoils, ReadDiscreteInputs, ReadFIFOQueue, ReadFileRecord, ReadHoldingRegisters, ReadInputRegisters,
   ReadWriteMultipleRegisters, WriteFileRecord, WriteMultipleCoils, WriteMultipleRegisters, WriteSingleCoil, WriteSingleRegister
 }
 import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray}
@@ -49,7 +50,7 @@ class RequestDecodingEncodingTest extends AnyWordSpecLike {
       forAll(hexWithRequests) {
         (hex, expectedRequest) =>
           // when
-          val Right(decodedRequest) = decoder.decodeHexRequest(hex): @unchecked
+          val Right(decodedRequest) = decoder.decodeHex(hex): @unchecked
 
           // then
           decodedRequest shouldBe expectedRequest

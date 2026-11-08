@@ -5,6 +5,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
 import pl.belicki.modbus.models.function._
+import pl.belicki.modbus.models.function.decoder.ModbusResponseDecoder
 import pl.belicki.modbus.models.function.eit.EncapsulatedInterfaceTransport.ReadDeviceIdentification.ObjectInfo
 import pl.belicki.modbus.models.function.eit.{ConformityLevel, DefinedObjectId, EncapsulatedInterfaceTransport, ReadDeviceIdCode}
 import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray}
@@ -92,7 +93,7 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
       forAll(hexWithRequests) {
         (hex, expectedResponse) =>
           // when
-          val Right(decodedResponse) = decoder.decodeHexResponse(hex): @unchecked
+          val Right(decodedResponse) = decoder.decodeHex(hex): @unchecked
 
           // then
           decodedResponse shouldBe expectedResponse

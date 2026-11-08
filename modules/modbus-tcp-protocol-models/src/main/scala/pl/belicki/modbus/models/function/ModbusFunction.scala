@@ -1,6 +1,7 @@
 package pl.belicki.modbus.models.function
 
 import pl.belicki.modbus.models.ExceptionCode
+import pl.belicki.modbus.models.function.decoder.ModbusRequestDecoder
 import pl.belicki.modbus.models.util.SpacedHex
 import pl.belicki.modbus.models.validator.RangeValidator
 

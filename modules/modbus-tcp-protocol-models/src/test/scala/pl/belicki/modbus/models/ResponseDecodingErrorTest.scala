@@ -4,7 +4,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.prop.TableDrivenPropertyChecks.forAll
 import org.scalatest.prop.Tables.Table
 import org.scalatest.wordspec.AnyWordSpecLike
-import pl.belicki.modbus.models.function.ModbusResponseDecoder
+import pl.belicki.modbus.models.function.decoder.ModbusResponseDecoder
 
 class ResponseDecodingErrorTest extends AnyWordSpecLike {
 
@@ -19,7 +19,7 @@ class ResponseDecodingErrorTest extends AnyWordSpecLike {
     "properly result with decoding error" in {
       forAll(hexWithRequests) {
         (hex, expectedError) =>
-          val Left(message) = decoder.decodeHexResponse(hex): @unchecked
+          val Left(message) = decoder.decodeHex(hex): @unchecked
 
           message shouldBe expectedError
 
