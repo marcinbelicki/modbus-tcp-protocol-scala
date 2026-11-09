@@ -26,6 +26,8 @@ trait ModbusMessageDecoder[E, M <: ModbusFunction#Message] {
   protected def noFunctionCodeError: E
   protected def notSupportedFunctionError(functionCode: Byte): E
   protected def decodeMessage(modbusFunction: ModbusFunction, byteBuffer: ByteBuffer): Result
+  def dataTooLong: E
+  def dataTooShort: E
 
   def decode(byteBuffer: ByteBuffer): Result =
     for {
