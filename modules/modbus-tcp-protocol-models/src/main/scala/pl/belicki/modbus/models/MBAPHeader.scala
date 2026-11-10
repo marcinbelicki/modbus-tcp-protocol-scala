@@ -5,15 +5,35 @@ import pl.belicki.modbus.models.function.decoder.ModbusMessageDecoder
 import java.nio.ByteBuffer
 
 case class MBAPHeader(
-    transactionIdentifier: Int,
-    protocolIdentifier: Int,
+    transactionIdentifier: Short,
+    protocolIdentifier: Short,
     length: Int,
-    unitIdentifier: Short
+    unitIdentifier: Byte
 )
 
 object MBAPHeader {
-  def decode[E,M](decoder: ModbusMessageDecoder[E, M])(byteBuffer: ByteBuffer) = {
+  val SIZE = java.lang.Short.BYTES * 3 + java.lang.Byte.BYTES
 
-    if
+  def decode[E](decoder: ModbusMessageDecoder[E, _])(data: ByteBuffer): Either[E, MBAPHeader] = {
+
+    if (data.remaining() < SIZE) return Left(decoder.dataTooShort)
+
+    val transactionIdentifier = data.getShort()
+    val protocolIdentifier    = data.getShort()
+    val length                = java.lang.Short.toUnsignedInt(data.getShort())
+
+    if (length != data.remaining()) return Left(decoder.lengthIncorrect)
+
+    val unitIdentifier = data.get()
+
+    Right(
+      MBAPHeader(
+        transactionIdentifier,
+        protocolIdentifier,
+        length,
+        unitIdentifier
+      )
+    )
+
   }
 }

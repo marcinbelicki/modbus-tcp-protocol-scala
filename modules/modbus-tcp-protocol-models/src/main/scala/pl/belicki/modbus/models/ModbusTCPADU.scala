@@ -12,13 +12,12 @@ case class ModbusTCPADU[M <: ModbusFunction#Message](
 )
 
 object ModbusTCPADU {
-  val MAX_LENGTH: Int = 260
-  def decode[E, M <: ModbusFunction#Message](decoder: ModbusMessageDecoder[E, M])(data: ByteBuffer): Either[E, ModbusTCPADU[M]]  = {
+  val MAX_LENGTH: Int                                                                                                           = 260
+  def decode[E, M <: ModbusFunction#Message](decoder: ModbusMessageDecoder[E, M])(data: ByteBuffer): Either[E, ModbusTCPADU[M]] = {
     if (data.remaining() > MAX_LENGTH) return Left(decoder.dataTooLong)
     for {
-
-      info <- decoder.decode(data)
-
-    }
+      header  <- MBAPHeader.decode(decoder)(data)
+      message <- decoder.decode(data)
+    } yield ModbusTCPADU(header, message)
   }
 }
