@@ -12,7 +12,7 @@ case class MBAPHeader(
 )
 
 object MBAPHeader {
-  val SIZE = java.lang.Short.BYTES * 3 + java.lang.Byte.BYTES
+  val SIZE: Int = java.lang.Short.BYTES * 3 + java.lang.Byte.BYTES
 
   def decode[E](decoder: ModbusMessageDecoder[E, _])(data: ByteBuffer): Either[E, MBAPHeader] = {
 

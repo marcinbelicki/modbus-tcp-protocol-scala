@@ -11,12 +11,18 @@ class ModbusRequestDecoder(
     protected val supportedFunctions: List[ModbusFunction]
 ) extends ModbusMessageDecoder[ModbusError, ModbusFunction#Request] {
 
-  override protected def noFunctionCodeError: ModbusError = ModbusError(ExceptionCode.ILLEGAL_FUNCTION, ERROR_CODE_ADDITION)
+  override protected lazy val noFunctionCodeError: ModbusError = ModbusError(ExceptionCode.ILLEGAL_FUNCTION, ERROR_CODE_ADDITION)
 
   override protected def notSupportedFunctionError(functionCode: Byte): ModbusError =
     ModbusError(ExceptionCode.ILLEGAL_FUNCTION, (functionCode + ERROR_CODE_ADDITION).toByte)
 
   override protected def decodeMessage(modbusFunction: ModbusFunction, byteBuffer: ByteBuffer): Result = modbusFunction.decodeRequest(byteBuffer)
+
+  override lazy val dataTooLong: ModbusError = ModbusError(ExceptionCode.ILLEGAL_DATA_VALUE, ERROR_CODE_ADDITION)
+
+  override lazy val dataTooShort: ModbusError = ModbusError(ExceptionCode.ILLEGAL_DATA_VALUE, ERROR_CODE_ADDITION)
+
+  override lazy val lengthIncorrect: ModbusError = ModbusError(ExceptionCode.ILLEGAL_DATA_VALUE, ERROR_CODE_ADDITION)
 }
 
 object ModbusRequestDecoder {
