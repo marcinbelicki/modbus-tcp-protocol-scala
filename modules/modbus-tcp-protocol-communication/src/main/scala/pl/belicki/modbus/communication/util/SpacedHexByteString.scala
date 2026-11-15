@@ -17,4 +17,14 @@ object SpacedHexByteString {
       formatByteString(byteString)
   }
 
+  implicit class ByteStringHelper(val sc: StringContext) extends AnyVal {
+    def b(args: Any*): String = {
+      val argsMapped = args.map {
+        case byteString: ByteString => formatByteString(byteString)
+        case other                  => other
+      }
+      sc.s(argsMapped: _*)
+    }
+  }
+
 }

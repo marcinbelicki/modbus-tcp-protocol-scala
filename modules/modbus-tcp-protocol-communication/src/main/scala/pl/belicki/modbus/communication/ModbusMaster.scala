@@ -3,7 +3,7 @@ package pl.belicki.modbus.communication
 import org.apache.pekko.actor.{Actor, ActorLogging, DiagnosticActorLogging}
 import org.apache.pekko.event.Logging.MDC
 import org.apache.pekko.util.ByteString
-import pl.belicki.modbus.communication.util.SpacedHexByteString.ByteStringExt
+import pl.belicki.modbus.communication.util.SpacedHexByteString.{ByteStringHelper, ByteStringExt}
 
 import java.net.{InetAddress, InetSocketAddress}
 
@@ -15,10 +15,9 @@ class ModbusMaster(inetSocketAddress: InetSocketAddress) extends Actor with Diag
 
   override def receive: Receive = {
     case Received(data) =>
-      log.info(s"Received data: [${data.spacedHex}].")
-      val
+      log.info(b"Received data: [$data].")
     case PeerClosed =>
-      log.info(s"Connection with remote closed.")
+      log.info("Connection with remote closed.")
       context.stop(self)
   }
 }
