@@ -12,9 +12,9 @@ import pl.belicki.modbus.models.util.SpacedHex.{SpacedHex, hexToArray}
 
 class ResponseDecodingEncodingTest extends AnyWordSpecLike {
 
-  private val hexWithRequests =
+  private val hexWithResponses =
     Table(
-      ("hex",                     "expectedRequest"),
+      ("hex",                     "expectedResponse"),
       ("01 03 CD 6B 05",          ReadCoils.Response("CD 6B 05")),
       ("02 03 AC DB 35",          ReadDiscreteInputs.Response("AC DB 35")),
       ("03 06 02 2B 00 00 00 64", ReadHoldingRegisters.Response("02 2B 00 00 00 64")),
@@ -90,7 +90,7 @@ class ResponseDecodingEncodingTest extends AnyWordSpecLike {
     "properly decode given hex" in {
 
       // given
-      forAll(hexWithRequests) {
+      forAll(hexWithResponses) {
         (hex, expectedResponse) =>
           // when
           val Right(decodedResponse) = decoder.decodeHex(hex): @unchecked
