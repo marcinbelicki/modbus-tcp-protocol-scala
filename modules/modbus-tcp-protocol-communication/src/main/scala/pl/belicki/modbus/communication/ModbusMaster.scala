@@ -2,7 +2,6 @@ package pl.belicki.modbus.communication
 
 import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, DiagnosticActorLogging}
 import org.apache.pekko.event.Logging.MDC
-import org.apache.pekko.util.ByteString
 import pl.belicki.modbus.communication.util.SpacedHexByteString.{ByteStringExt, ByteStringHelper}
 import pl.belicki.modbus.models.ModbusTCPADU
 import pl.belicki.modbus.models.function.decoder.ModbusRequestDecoder
