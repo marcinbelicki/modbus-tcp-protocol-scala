@@ -1,9 +1,12 @@
 package pl.belicki.modbus.communication
 
+import org.apache.pekko.actor.Actor.emptyBehavior
 import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, DiagnosticActorLogging}
 import org.apache.pekko.event.Logging.MDC
+import pl.belicki.modbus.communication.diagnostic.MDCs
 import pl.belicki.modbus.communication.util.SpacedHexByteString.{ByteStringExt, ByteStringHelper}
 import pl.belicki.modbus.models.ModbusTCPADU
+import pl.belicki.modbus.models.function.ModbusFunction
 import pl.belicki.modbus.models.function.decoder.ModbusRequestDecoder
 
 import java.net.{InetAddress, InetSocketAddress}
@@ -16,7 +19,17 @@ class ModbusMaster(
   import org.apache.pekko.io.Tcp._
 
   override def mdc(currentMessage: Any): MDC =
-    Map("remote" -> s"R:${inetSocketAddress.getHostString}:${inetSocketAddress.getPort}|")
+    Map(MDCs.address(inetSocketAddress))
+
+  class ModbusUnit(unitId: Int) extends Actor with DiagnosticActorLogging {
+
+    override def mdc(currentMessage: Any): MDC =
+      ModbusMaster.this.mdc(currentMessage) ++ Map(
+        "unitId" -> f"U:$unitId%03d"
+      )
+
+    override def receive: Receive = emptyBehavior
+  }
 
   override def receive: Receive = {
     case Received(data) =>
