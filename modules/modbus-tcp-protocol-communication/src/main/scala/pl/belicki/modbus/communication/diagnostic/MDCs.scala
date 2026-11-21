@@ -6,5 +6,6 @@ import java.net.InetSocketAddress
 
 object MDCs {
 
-  def address(inetSocketAddress: InetSocketAddress): (String, String) =
-    "remote" -> s"R:${inetSocketAddress.getHostString}:${inetSocketAddress.getPort}|"}
+  def remote(remoteAddress: InetSocketAddress): (String, String) =
+    "remote" -> s"R:${remoteAddress.getHostString}:${remoteAddress.getPort}|"
+}

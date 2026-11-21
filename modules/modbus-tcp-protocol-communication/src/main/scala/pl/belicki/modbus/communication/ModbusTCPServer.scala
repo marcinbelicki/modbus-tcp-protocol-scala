@@ -3,6 +3,7 @@ package pl.belicki.modbus.communication
 import org.apache.pekko.actor.{Actor, ActorLogging, DiagnosticActorLogging, Props}
 import org.apache.pekko.io.{IO, Tcp}
 import org.apache.pekko.io.Tcp._
+import pl.belicki.modbus.models.function.decoder.ModbusRequestDecoder
 
 import java.net.InetSocketAddress
 
@@ -23,7 +24,8 @@ class ModbusTCPServer(inetSocketAddress: InetSocketAddress) extends Actor with A
       context.stop(self)
 
     case connected: Connected =>
-      val handler = context.actorOf(Props(new ModbusMaster(connected.remoteAddress)))
+      val handler =
+        context.actorOf(Props(new ModbusConnectionHandler(connected.remoteAddress, ModbusRequestDecoder.ALL_FUNCTIONS)))
       log.info(s"Connected to: ${connected.remoteAddress}")
       val connection = sender()
       connection ! Register(handler)

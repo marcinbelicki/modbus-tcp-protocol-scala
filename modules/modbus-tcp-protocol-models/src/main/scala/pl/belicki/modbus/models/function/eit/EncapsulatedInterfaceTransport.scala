@@ -16,7 +16,7 @@ object EncapsulatedInterfaceTransport extends ModbusFunction(0x2b) {
     val code: Byte = _code.toByte
 
     trait Message {
-      this: EncapsulatedInterfaceTransport.Message =>
+      this: EncapsulatedInterfaceTransport.FunctionMessage =>
       val subFunction: SubFunction = SubFunction.this
 
       protected def encodeRest(byteBuffer: ByteBuffer): Either[String, ByteBuffer]

@@ -12,28 +12,17 @@ import scala.language.{existentials, implicitConversions}
 abstract class ModbusFunction(_code: Int) {
   val code: Byte = _code.toByte
 
-  abstract class Message {
+  abstract class FunctionMessage extends Message {
     val function: ModbusFunction = ModbusFunction.this
 
-    def size: Int
-    def encode(byteBuffer: ByteBuffer): Either[String, ByteBuffer]
+    override def putCode(byteBuffer: ByteBuffer): Unit = byteBuffer.put(code)
 
-    private lazy val fullSize = size + java.lang.Byte.BYTES
-
-    def toByteBuffer: Either[String, ByteBuffer] =
-      for {
-        _ <- MessageSizeValidator.validate(fullSize)
-        byteBuffer = ByteBuffer.allocate(fullSize)
-        _          = byteBuffer.put(code)
-        byteBuffer <- encode(byteBuffer)
-      } yield byteBuffer
+    override lazy val fullSize: Int = size + java.lang.Byte.BYTES
   }
 
-  abstract class Request extends Message
+  abstract class Request extends FunctionMessage
 
-  object MessageSizeValidator extends RangeValidator(0x0000, 0x00fd, "size")
-
-  abstract class Response extends Message
+  abstract class Response extends FunctionMessage
 
   def error(exceptionCode: ExceptionCode) =
     ModbusError(exceptionCode = exceptionCode, functionCode = errorCode)

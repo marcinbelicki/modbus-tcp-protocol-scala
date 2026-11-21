@@ -6,7 +6,7 @@ import pl.belicki.modbus.models.util.SpacedHex
 
 import java.nio.ByteBuffer
 
-trait ModbusMessageDecoder[E, M <: ModbusFunction#Message] {
+trait ModbusMessageDecoder[E, M <: ModbusFunction#FunctionMessage] {
 
   type Result = Either[E, M]
 
